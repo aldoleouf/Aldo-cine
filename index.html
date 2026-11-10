@@ -49,6 +49,45 @@ button:active{transform:scale(.97)}
 .nav button{transition:background .22s ease,color .22s ease,border-color .22s ease,transform .18s ease}
 @media(prefers-reduced-motion:reduce){.page:not(.hidden),.item,.viewing-dialog:not(.hidden),.viewing-dialog:not(.hidden) .viewing-card,#searchPanel:not(.hidden),.toast:not(.hidden){animation:none!important}.item .poster,button,.nav button{transition:none!important}button:active{transform:none}}
 </style>
+
+<style id="aldo-disney-hero">
+#appleHero{position:relative;isolation:isolate;margin:0 0 30px;padding:0;overflow:visible;background:none;border:0;box-shadow:none;min-height:0;display:block}
+.ac-hero-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,10fr) minmax(0,1fr);gap:14px;align-items:center;width:calc(100% + 100px);margin-left:-50px}
+.ac-hero-main,.ac-hero-side{height:clamp(420px,42vw,590px);border:1px solid #ffffff20;border-radius:25px;overflow:hidden;background-color:#22232a;background-position:center 28%;background-size:cover;box-shadow:0 20px 55px #0008}
+.ac-hero-main{position:relative;display:flex;align-items:flex-end;background-image:linear-gradient(0deg,#08090df5 0%,#08090d80 42%,#08090d08 78%);min-width:0}
+.ac-hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,#08090d4d,transparent 65%);pointer-events:none}
+.ac-hero-copy{position:relative;z-index:1;padding:clamp(22px,4vw,52px);max-width:760px}
+.ac-hero-kicker{font-size:12px;font-weight:850;letter-spacing:.18em;color:#e1e2e9;margin:0 0 13px}
+.ac-hero-copy h2{font-size:clamp(32px,5vw,62px);line-height:1.02;letter-spacing:-.045em;margin:0 0 12px;text-shadow:0 3px 22px #0009}
+.ac-hero-meta{font-size:15px;color:#e1e2e9;margin:0 0 22px;text-shadow:0 2px 10px #000}
+.ac-hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ac-hero-actions button{padding:12px 20px}
+.ac-hero-link{color:#fff;text-decoration:none;font-weight:700;padding:11px 15px;border-radius:999px;background:#ffffff20;border:1px solid #ffffff50}
+.ac-hero-side{display:block;width:100%;min-width:0;padding:0;opacity:.68;filter:saturate(.78);cursor:pointer;transition:opacity .25s,transform .25s}
+.ac-hero-side:hover{opacity:.9;transform:scale(1.015)}
+.ac-hero-controls{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:15px}
+.ac-hero-controls>button{width:34px;height:34px;padding:0;border-radius:50%;font-size:23px;line-height:1;background:#292a31;color:#fff;border:1px solid #ffffff30}
+.ac-hero-dots{display:flex;align-items:center;justify-content:center;gap:7px}
+.ac-hero-dots button{width:7px;height:7px;min-width:7px;padding:0;border-radius:50%;background:#686a74;border:0;transition:width .2s,background .2s}
+.ac-hero-dots button.active{width:23px;background:#fff}
+.ac-hero-empty{min-height:330px;border-radius:25px;padding:45px;background:linear-gradient(135deg,#30313a,#101116);display:flex;flex-direction:column;justify-content:flex-end}
+.ac-hero-empty h2{font-size:clamp(30px,5vw,54px);margin:0 0 10px}
+.ac-hero-empty p:not(.ac-hero-kicker){color:#d0d1d8;max-width:480px}
+@media(max-width:650px){
+ #appleHero{margin:0 -12px 25px;overflow:hidden}
+ .ac-hero-stage{grid-template-columns:minmax(0,1fr) 86vw minmax(0,1fr);gap:9px;width:calc(100% + 18vw);margin-left:-9vw}
+ .ac-hero-main,.ac-hero-side{height:min(118vw,690px);border-radius:22px}
+ .ac-hero-main{background-position:center 24%}
+ .ac-hero-copy{padding:25px 21px}
+ .ac-hero-copy h2{font-size:clamp(32px,9vw,46px)}
+ .ac-hero-meta{font-size:13px;margin-bottom:16px}
+ .ac-hero-kicker{font-size:10px}
+ .ac-hero-side{opacity:.55}
+ .ac-hero-controls{margin-top:12px}
+ .ac-hero-empty{margin:0 12px;min-height:300px;padding:25px}
+}
+@media(prefers-reduced-motion:reduce){.ac-hero-side,.ac-hero-dots button{transition:none!important}}
+</style>
 </head><body><main class="app">
 <header class="top"><div class="brand"><div class="logo">▶</div><div><h1>Aldo Ciné</h1><p>Ma bibliothèque de films et séries</p></div></div><div class="row"><button id="searchOpen">＋ Ajouter</button><button class="secondary" id="exportBtn">Exporter</button><button class="secondary" id="importBtn">Importer</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></header>
 <nav class="nav" id="nav"><button data-page="home" class="active">Accueil</button><button data-page="library">Bibliothèque</button><button data-page="todo">À voir</button><button data-page="suggestions">Suggestion</button><button data-page="stats">Statistiques</button></nav>
@@ -168,23 +207,51 @@ $("searchBtn").onclick=async()=>{const q=$("searchQuery").value.trim();if(!q)ret
 $("manualAdd").onclick=()=>{const title=$("manualTitle").value.trim();if(!title)return notify("Saisis un titre");addEntry({title,type:$("manualType").value,year:$("manualYear").value,releaseDate:$("manualRelease").value},$("manualStatus").value);$("manualTitle").value="";$("manualYear").value="";$("manualRelease").value="";$("searchPanel").classList.add("hidden")};
 $("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(entries,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="aldo-cine-bibliotheque.json";a.click();URL.revokeObjectURL(a.href);notify("Export téléchargé")};$("importBtn").onclick=()=>$("importFile").click();$("importFile").onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw Error();if(confirm("Fusionner "+data.length+" éléments avec ta bibliothèque actuelle ? Les titres déjà présents seront conservés, sans changer leur catégorie.")){let added=0;const key=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();for(const item of data){if(!item||!item.title)continue;const exists=entries.some(e=>e.type===(item.type||"movie")&&key(e.title)===key(item.title));if(!exists){entries.push({...item,id:item.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),status:item.status||"todo",watchedAt:"",cinema:false,company:""});added++}}save();notify(added+" titre(s) ajouté(s), doublons ignorés")}}catch{notify("Fichier JSON invalide")}ev.target.value=""};
 
-/* Cinematic featured banner; library data and existing workflows remain unchanged. */
-function updateAppleHero(){
- const home=document.getElementById("home"); if(!home)return;
+/* Disney+-inspired featured carousel: 8 works, with the existing library as its source. */
+let aldoHeroItems=[];
+let aldoHeroIndex=0;
+let aldoHeroTimer=null;
+function getHeroItems(){
+ const yr=$("homeYear")?.value||"all";
+ const pool=(entries||[]).filter(e=>e.title&&(yr==="all"||year(e)===yr));
+ const sorted=pool.slice().sort((a,b)=>{
+  const aDate=a.watchedAt||a.releaseDate||"";
+  const bDate=b.watchedAt||b.releaseDate||"";
+  if(a.status==="todo"&&b.status!=="todo")return 1;
+  if(b.status==="todo"&&a.status!=="todo")return -1;
+  return bDate.localeCompare(aDate);
+ });
+ return sorted.slice(0,8);
+}
+function heroArtwork(item){
+ return item&&item.poster?posterSrc(item.poster):"";
+}
+function renderHeroCarousel(){
+ const home=document.getElementById("home");if(!home)return;
  let hero=document.getElementById("appleHero");
  if(!hero){hero=document.createElement("section");hero.id="appleHero";hero.setAttribute("aria-label","À la une");home.insertBefore(hero,home.firstChild);}
- const pick=(entries||[]).find(e=>e.status!=="todo")||(entries||[])[0];
- if(!pick){hero.style.backgroundImage="linear-gradient(135deg,#26262d,#09090b)";hero.innerHTML='<div class="hero-copy"><p class="hero-kicker">Aldo Ciné · Votre univers</p><h2>Tout votre cinéma, au même endroit.</h2><p class="hero-empty">Construisez votre collection de films et de séries, et retrouvez vos prochaines découvertes.</p><div class="hero-actions"><button id="appleHeroExplore">＋ Ajouter un titre</button></div></div>';}
- else{
-  const bg=pick.poster?posterSrc(pick.poster):"";
-  hero.style.backgroundImage='linear-gradient(90deg,#050506f2 0%,#050506c9 42%,#05050625 100%),linear-gradient(0deg,#050506ef 0%,transparent 70%)'+(bg?',url("'+bg.replace(/"/g,'%22')+'")':'');
-  hero.innerHTML='<div class="hero-copy"><p class="hero-kicker">Votre collection · À la une</p><h2>'+esc(pick.title||"À découvrir")+'</h2><p>'+((pick.type==="tv")?"Série":"Film")+(pick.year?" · "+esc(String(pick.year)):"")+' · Retrouvez vos œuvres et continuez à enrichir votre bibliothèque.</p><div class="hero-actions"><button id="appleHeroExplore">＋ Ajouter un titre</button><button class="secondary" id="appleHeroLibrary">Explorer ma bibliothèque</button></div></div>';
+ aldoHeroItems=getHeroItems();
+ if(!aldoHeroItems.length){
+  hero.innerHTML='<div class="ac-hero-empty"><p class="ac-hero-kicker">ALDO CINÉ · À LA UNE</p><h2>Ton prochain coup de cœur commence ici.</h2><p>Ajoute des films et des séries à ta bibliothèque pour composer ta sélection.</p><button id="appleHeroExplore">＋ Ajouter un titre</button></div>';
+  const add=document.getElementById("appleHeroExplore");if(add)add.onclick=()=>document.getElementById("searchOpen").click();
+  return;
  }
- const add=document.getElementById("appleHeroExplore");if(add)add.onclick=()=>document.getElementById("searchOpen").click();
+ aldoHeroIndex=((aldoHeroIndex%aldoHeroItems.length)+aldoHeroItems.length)%aldoHeroItems.length;
+ const count=aldoHeroItems.length;
+ const current=aldoHeroItems[aldoHeroIndex];
+ const previous=aldoHeroItems[(aldoHeroIndex-1+count)%count];
+ const next=aldoHeroItems[(aldoHeroIndex+1)%count];
+ const side=(item,direction)=>'<button class="ac-hero-side ac-hero-'+direction+'" type="button" data-hero-step="'+(direction==="prev"?-1:1)+'" aria-label="'+(direction==="prev"?"Œuvre précédente":"Œuvre suivante")+'" style="background-image:linear-gradient(0deg,#08090de8,transparent 70%),url(&quot;'+heroArtwork(item).replace(/&/g,"%26").replace(/"/g,"%22")+'&quot;)"></button>';
+ const poster=heroArtwork(current);
+ const status=current.status==="todo"?"À découvrir":current.status==="rewatch"?"À revoir":current.status==="episodes"?"Nouveaux épisodes":"Dans ta collection";
+ hero.innerHTML='<div class="ac-hero-stage">'+side(previous,"prev")+'<article class="ac-hero-main" style="'+(poster?'background-image:linear-gradient(0deg,#08090df5 0%,#08090d8c 38%,#08090d08 78%),url(&quot;'+poster.replace(/&/g,"%26").replace(/"/g,"%22")+'&quot;)':'')+'"><div class="ac-hero-shade"></div><div class="ac-hero-copy"><p class="ac-hero-kicker">✦ TA SÉLECTION · '+(aldoHeroIndex+1)+' / '+count+'</p><h2>'+esc(current.title||"À découvrir")+'</h2><p class="ac-hero-meta">'+(current.type==="tv"?"Série":"Film")+(current.year?" · "+esc(String(current.year)):"")+' · '+status+'</p><div class="ac-hero-actions"><button type="button" id="appleHeroLibrary">Explorer ma bibliothèque</button>'+(current.tmdbId?'<a class="ac-hero-link" href="'+tmdbUrl(current)+'" target="_blank" rel="noopener noreferrer">Fiche TMDB ↗</a>':'')+'</div></div></article>'+side(next,"next")+'</div><div class="ac-hero-controls"><button type="button" data-hero-step="-1" aria-label="Œuvre précédente">‹</button><div class="ac-hero-dots">'+aldoHeroItems.map((item,i)=>'<button type="button" data-hero-index="'+i+'" class="'+(i===aldoHeroIndex?"active":"")+'" aria-label="Afficher '+esc(item.title)+'"></button>').join("")+'</div><button type="button" data-hero-step="1" aria-label="Œuvre suivante">›</button></div>';
  const lib=document.getElementById("appleHeroLibrary");if(lib)lib.onclick=()=>document.querySelector('[data-page="library"]').click();
+ hero.querySelectorAll("[data-hero-step]").forEach(b=>b.addEventListener("click",()=>{aldoHeroIndex=(aldoHeroIndex+Number(b.dataset.heroStep)+count)%count;renderHeroCarousel();}));
+ hero.querySelectorAll("[data-hero-index]").forEach(b=>b.addEventListener("click",()=>{aldoHeroIndex=Number(b.dataset.heroIndex);renderHeroCarousel();}));
+ if(!aldoHeroTimer)aldoHeroTimer=setInterval(()=>{if(document.hidden||!document.getElementById("home")?.classList.contains("hidden")===false){aldoHeroIndex=(aldoHeroIndex+1)%Math.max(1,aldoHeroItems.length);renderHeroCarousel();}},6500);
 }
 const appleOriginalRender=render;
-render=function(){appleOriginalRender();updateAppleHero();};
+render=function(){appleOriginalRender();renderHeroCarousel();};
 
 
 const SUGGESTIONS_STORAGE_KEY="aldoCineDailySuggestionsV1";
