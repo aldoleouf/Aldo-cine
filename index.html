@@ -248,7 +248,7 @@ function renderHeroCarousel(){
  const lib=document.getElementById("appleHeroLibrary");if(lib)lib.onclick=()=>document.querySelector('[data-page="library"]').click();
  hero.querySelectorAll("[data-hero-step]").forEach(b=>b.addEventListener("click",()=>{aldoHeroIndex=(aldoHeroIndex+Number(b.dataset.heroStep)+count)%count;renderHeroCarousel();}));
  hero.querySelectorAll("[data-hero-index]").forEach(b=>b.addEventListener("click",()=>{aldoHeroIndex=Number(b.dataset.heroIndex);renderHeroCarousel();}));
- if(!aldoHeroTimer)aldoHeroTimer=setInterval(()=>{if(document.hidden||!document.getElementById("home")?.classList.contains("hidden")===false){aldoHeroIndex=(aldoHeroIndex+1)%Math.max(1,aldoHeroItems.length);renderHeroCarousel();}},6500);
+ if(!aldoHeroTimer)aldoHeroTimer=setInterval(()=>{if(document.hidden||document.getElementById("home")?.classList.contains("hidden"))return;aldoHeroIndex=(aldoHeroIndex+1)%Math.max(1,aldoHeroItems.length);renderHeroCarousel();},6500);
 }
 const appleOriginalRender=render;
 render=function(){appleOriginalRender();renderHeroCarousel();};
