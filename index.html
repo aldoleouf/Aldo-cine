@@ -102,7 +102,13 @@ button:active{transform:scale(.97)}
 .app{padding-bottom:calc(100px + env(safe-area-inset-bottom))!important}
 @media(min-width:700px){.bottom-nav{padding-left:max(8px,calc((100vw - 760px)/2))!important;padding-right:max(8px,calc((100vw - 760px)/2))!important}.bottom-nav button{font-size:11px}}
 @media(max-width:360px){.bottom-nav button{font-size:9px}.bottom-nav button svg{width:21px;height:21px}}
-</style></head><body><main class="app">
+<style id="edit-dialog-above-bottom-nav">
+/* Le formulaire d’édition doit rester au-dessus de la barre de navigation fixe. */
+.viewing-dialog{z-index:100!important;padding:12px 12px calc(12px + env(safe-area-inset-bottom))!important}
+.viewing-dialog .viewing-card{position:relative;z-index:101;max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+#editDialog .viewing-card>.row:last-child{position:sticky;bottom:-1px;z-index:2;padding:12px 0 2px;background:linear-gradient(180deg,transparent,#19191e 18%)}
+#editDialog .viewing-card>.row:last-child button{flex:1;min-width:0}
+</style></style></head><body><main class="app">
 <header class="top"><div class="brand"><div class="logo">▶</div><div><h1>Aldo Ciné</h1><p>Ma bibliothèque de films et séries</p></div></div><div class="row"><button id="searchOpen">＋ Ajouter</button><button class="secondary" id="exportBtn">Exporter</button><button class="secondary" id="importBtn">Importer</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></header>
 <nav class="nav bottom-nav" id="nav" aria-label="Navigation principale">
 <button data-page="home" class="active" aria-label="Accueil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Accueil</span></button>
