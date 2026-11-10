@@ -104,11 +104,11 @@ button:active{transform:scale(.97)}
 @media(max-width:360px){.bottom-nav button{font-size:9px}.bottom-nav button svg{width:21px;height:21px}}
 </style>
 <style id="edit-dialog-above-bottom-nav">
-/* Le formulaire d’édition doit rester au-dessus de la barre de navigation fixe. */
-.viewing-dialog{z-index:100!important;padding:12px 12px calc(12px + env(safe-area-inset-bottom))!important}
-.viewing-dialog .viewing-card{position:relative;z-index:101;max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
-#editDialog .viewing-card>.row:last-child{position:sticky;bottom:-1px;z-index:2;padding:12px 0 2px;background:linear-gradient(180deg,transparent,#19191e 18%)}
-#editDialog .viewing-card>.row:last-child button{flex:1;min-width:0}
+/* La fenêtre d’édition recouvre la navigation fixe et garde ses actions visibles. */
+#viewingDialog{position:fixed!important;z-index:1000!important;inset:0!important;padding:12px 12px calc(12px + env(safe-area-inset-bottom))!important;align-items:center!important}
+#viewingDialog .viewing-card{position:relative;z-index:1001;width:min(100%,520px);max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;padding-bottom:18px}
+#viewingDialog .viewing-card>.row:last-child{position:sticky;bottom:-1px;z-index:2;display:flex;gap:10px;padding:14px 0 2px;background:#19191e}
+#viewingDialog .viewing-card>.row:last-child button{flex:1;min-width:0;min-height:46px}
 </style></style></head><body><main class="app">
 <header class="top"><div class="brand"><div class="logo">▶</div><div><h1>Aldo Ciné</h1><p>Ma bibliothèque de films et séries</p></div></div><div class="row"><button id="searchOpen">＋ Ajouter</button><button class="secondary" id="exportBtn">Exporter</button><button class="secondary" id="importBtn">Importer</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></header>
 <nav class="nav bottom-nav" id="nav" aria-label="Navigation principale">
