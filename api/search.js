@@ -51,7 +51,8 @@ export default async function handler(req, res) {
           year: releaseDate ? String(releaseDate).slice(0, 4) : "",
           releaseDate: releaseDate || "",
           poster: item.poster_path || "",
-          tmdbId: String(item.id || "")
+          tmdbId: String(item.id || ""),
+          overview: String(item.overview || "")
         };
       })
       .filter(item => item && item.title)
