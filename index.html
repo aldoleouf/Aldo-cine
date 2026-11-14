@@ -122,7 +122,7 @@ button:active{transform:scale(.97)}
 <section id="library" class="page hidden"><div class="panel"><div class="row"><h2>Bibliothèque</h2><strong id="resultCount">0 résultat</strong></div><div class="filters"><div class="field"><label for="filterType">Type</label><select id="filterType"><option value="all">Films et séries (0)</option><option value="movie">Films (0)</option><option value="tv">Séries (0)</option></select></div><div class="field"><label for="filterStatus">Catégorie</label><select id="filterStatus"><option value="all">Toutes les catégories (0)</option><option value="watched">Découvertes (0)</option><option value="rewatch">Revisionnages (0)</option><option value="episodes">Nouveaux épisodes (0)</option><option value="todo">À voir (0)</option></select></div><div class="field"><label for="filterYear">Année du visionnage</label><select id="filterYear"><option value="all">Toutes les années</option></select></div><div class="field"><label for="filterCinema">Cinéma</label><select id="filterCinema"><option value="all">Tous</option><option value="yes">Vu au cinéma</option><option value="no">Pas au cinéma</option></select></div><div class="field"><label for="filterCompany">Avec qui ?</label><select id="filterCompany"><option value="all">Solo et à deux</option><option value="solo">Solo</option><option value="duo">À deux</option></select></div><div class="field"><label for="filterSearch">Rechercher un titre</label><input id="filterSearch" placeholder="Titre…"></div></div><div class="row"><span class="muted" id="filterSummary">Tous les éléments</span><button class="secondary" id="resetFilters">Réinitialiser</button></div></div><div id="libraryList"></div></section>
 <section id="todo" class="page hidden"><div class="panel"><div class="row"><h2>Ma liste à voir</h2><button id="addTodo">＋ Ajouter un titre</button></div><p class="muted">Les films et séries que tu veux découvrir.</p><div id="todoList"></div></div></section>
 
-<section id="suggestions" class="page hidden"><div class="panel"><div class="row"><h2>Suggestions du jour</h2><span class="muted" id="suggestionsDate"></span></div><p class="muted">Un film et une série choisis à partir des œuvres de ta bibliothèque. Les suggestions restent les mêmes toute la journée.</p><div id="suggestionsStatus" class="muted" style="padding:10px 0">Préparation de tes suggestions…</div><div id="suggestionsGrid" class="suggestion-grid"></div></div></section><section id="stats" class="page hidden"><div class="panel"><h2>Statistiques</h2><div class="yearrow"><label for="statsYear">Année</label><select id="statsYear"><option value="all">Toutes les années</option></select></div><div class="stats" id="statsCards"></div></div><div class="panel"><h2>Répartition</h2><div id="statsDetails"></div></div></section>
+<section id="suggestions" class="page hidden"><div class="panel"><div class="row"><h2>Suggestions du jour</h2><span class="muted" id="suggestionsDate"></span></div><p class="muted">Un film et une série choisis à partir des œuvres de ta bibliothèque. Les suggestions restent les mêmes toute la journée.</p><div id="suggestionsStatus" class="muted" style="padding:10px 0">Préparation de tes suggestions…</div><div id="suggestionsGrid" class="suggestion-grid"></div></div></section><section id="stats" class="page hidden"><div class="panel"><h2>Statistiques</h2><div class="yearrow"><label for="statsYear">Année</label><select id="statsYear"><option value="all">Toutes les années</option></select></div><div class="stats" id="statsCards"></div></div><div class="panel"><div class="row"><div><h2>Aldo Ciné Wrapped</h2><p class="muted">Revisite ton année de films et de séries, façon Spotify Wrapped.</p></div><button id="openAldoWrapped">✨ Voir mon Wrapped</button></div></div><div class="panel"><h2>Répartition</h2><div id="statsDetails"></div></div></section>
 <section id="searchPanel" class="panel hidden"><div class="row"><h2>Ajouter un titre</h2><button class="secondary" id="closeSearch">Fermer</button></div><div class="filters"><div class="field"><label for="searchQuery">Rechercher sur TMDB</label><input id="searchQuery" placeholder="Titre d'un film ou d'une série"></div><div class="field"><label for="searchKind">Type</label><select id="searchKind"><option value="multi">Films et séries</option><option value="movie">Films</option><option value="tv">Séries</option></select></div><div style="align-self:end"><button id="searchBtn">Rechercher</button></div></div><div id="searchResults"></div><details class="manual-add"><summary>Ou ajouter manuellement</summary><div class="filters"><div class="field"><label for="manualTitle">Titre</label><input id="manualTitle" placeholder="Titre du film ou de la série"></div><div class="field"><label for="manualType">Type</label><select id="manualType"><option value="movie">Film</option><option value="tv">Série</option></select></div><div class="field"><label for="manualYear">Année de sortie</label><input id="manualYear" type="number" placeholder="2026"></div><div class="field"><label for="manualStatus">Catégorie</label><select id="manualStatus"><option value="watched">Découverte</option><option value="rewatch">Revisionnage</option><option value="episodes">Nouveaux épisodes</option><option value="todo">À voir</option></select></div><div class="field"><label for="manualRelease">Date de sortie</label><input id="manualRelease" type="date"></div></div><button id="manualAdd">Ajouter ce titre</button></details></section>
 
 <div id="viewingDialog" class="viewing-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="viewingTitle"><div class="viewing-card">
@@ -294,4 +294,137 @@ render();
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 </script>
 <script>(()=>{const root=document.getElementById("stats");if(!root||root.dataset.statsLinksReady)return;root.dataset.statsLinksReady="1";const m={"Films vus":{type:"movie"},"Séries suivies":{type:"tv"},"En solo":{company:"solo"},"À deux":{company:"duo"},"✨ Découvertes":{status:"watched"},"🔁 Revisionnages":{status:"rewatch"},"🆕 Nouveaux épisodes":{status:"episodes"},"👤 En solo":{company:"solo"},"👥 À deux":{company:"duo"},"🎬 Vu au cinéma":{cinema:"yes"},"🎬 Films à voir":{type:"movie",status:"todo"},"📺 Séries à voir":{type:"tv",status:"todo"}};function goCard(c){const k=(c.querySelector("small")?.textContent||"").trim().replace(/\s+/g," "),r=m[k];if(!r)return;const y=document.getElementById("statsYear")?.value||"all";const s=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v};s("filterType",r.type||"all");s("filterStatus",r.status||"all");s("filterCompany",r.company||"all");s("filterCinema",r.cinema||"all");s("filterYear",y);s("filterSearch","");go("library")}const a=()=>root.querySelectorAll(".counter").forEach(c=>{c.setAttribute("role","button");c.setAttribute("tabindex","0")});root.addEventListener("click",e=>{const c=e.target.closest(".counter");if(c)goCard(c)});root.addEventListener("keydown",e=>{const c=e.target.closest(".counter");if(c&&(e.key==="Enter"||e.key===" ")){e.preventDefault();goCard(c)}});a();new MutationObserver(a).observe(root,{childList:true,subtree:true})})();</script>
+
+<style id="aldo-wrapped-styles">
+#aldoWrappedPage{position:fixed;z-index:80;inset:0;background:#08090d;color:#fff;overflow:auto;padding:18px 14px 30px}
+.aw-shell{max-width:760px;margin:0 auto}
+.aw-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.aw-top h2{font-size:22px;margin:0;letter-spacing:-.04em}
+.aw-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#17181f;border:1px solid #ffffff20;border-radius:18px;padding:14px;margin-bottom:14px}
+.aw-controls .field{min-width:0}.aw-controls label{display:block;font-size:12px;color:#b9bac5;margin-bottom:5px}
+.aw-controls select,.aw-controls input{width:100%;background:#252630;border:1px solid #555866;border-radius:10px;padding:10px;color:#fff}
+.aw-range{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.aw-story{position:relative;min-height:min(68vh,690px);border-radius:26px;overflow:hidden;background:linear-gradient(145deg,#39213d,#12141e 65%,#251e3a);border:1px solid #ffffff24;box-shadow:0 20px 70px #0009;isolation:isolate}
+.aw-mosaic{position:absolute;inset:0;z-index:-2;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:3px;opacity:.43;transform:scale(1.06)}
+.aw-mosaic img{width:100%;height:100%;object-fit:cover;filter:saturate(.8)}
+.aw-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#08091040 0%,#080910aa 40%,#080910f5 100%)}
+.aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(25px,6vw,52px)}
+.aw-kicker{font-size:12px;font-weight:850;letter-spacing:.2em;color:#e6d5ff;text-transform:uppercase;margin-bottom:auto}
+.aw-number{font-size:clamp(76px,19vw,148px);line-height:.92;font-weight:950;letter-spacing:-.09em;margin:26px 0 14px;text-shadow:0 8px 36px #0008}
+.aw-title{font-size:clamp(27px,7vw,48px);line-height:1.02;font-weight:850;letter-spacing:-.055em;margin:0 0 12px}
+.aw-desc{font-size:15px;line-height:1.5;color:#e0deea;max-width:500px;margin:0}
+.aw-count{font-size:12px;color:#d1c9df;margin-top:24px}
+.aw-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0}
+.aw-nav button{flex:1}.aw-dots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:8px 0 14px}
+.aw-dots span{height:5px;width:16px;border-radius:8px;background:#555765}.aw-dots span.active{background:#fff;width:27px}
+.aw-actions{display:flex;gap:9px;flex-wrap:wrap}.aw-actions button{flex:1;min-width:150px}
+.aw-note{font-size:12px;color:#aeb0bb;margin-top:10px}
+@media(max-width:480px){#aldoWrappedPage{padding:12px 10px 24px}.aw-controls{grid-template-columns:1fr 1fr}.aw-story,.aw-content{min-height:64vh}.aw-number{font-size:clamp(72px,21vw,110px)}}
+</style>
+<section id="aldoWrappedPage" class="hidden" aria-label="Aldo Ciné Wrapped">
+ <div class="aw-shell">
+  <div class="aw-top"><div><p class="aw-kicker" style="margin:0 0 5px">ALDO CINÉ · WRAPPED</p><h2>Ton année à l’écran</h2></div><button class="secondary" id="closeAldoWrapped">Fermer</button></div>
+  <div class="aw-controls">
+   <div class="field"><label for="awMode">Type de période</label><select id="awMode"><option value="year">Une année</option><option value="range">Période personnalisée</option></select></div>
+   <div class="field" id="awYearField"><label for="awYear">Année</label><select id="awYear"></select></div>
+   <div class="aw-range hidden" id="awRange"><div class="field"><label for="awStart">Du</label><input id="awStart" type="date"></div><div class="field"><label for="awEnd">Au</label><input id="awEnd" type="date"></div></div>
+  </div>
+  <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-kicker" id="awKicker">ALDO CINÉ · TON WRAPPED</div><div class="aw-number" id="awNumber">0</div><h3 class="aw-title" id="awTitle">Tes séries</h3><p class="aw-desc" id="awDesc"></p><div class="aw-count" id="awCount"></div></div></div>
+  <div class="aw-dots" id="awDots"></div>
+  <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
+  <div class="aw-actions"><button id="awExport">↓ Exporter toutes les stories</button><button class="secondary" id="awShare">Partager les stories</button></div>
+  <p class="aw-note" id="awNote">Les fiches utilisent les affiches de ta bibliothèque. Les images sont générées directement sur ton appareil.</p>
+ </div>
+</section>
+<script id="aldo-wrapped-script">
+(()=>{
+ const $=id=>document.getElementById(id), page=$("aldoWrappedPage");
+ if(!page||page.dataset.ready)return;page.dataset.ready="1";
+ let slides=[],index=0;
+ const norm=e=>String(e.tmdbId||e.title||"").toLowerCase().trim();
+ const unique=arr=>{const seen=new Set();return arr.filter(e=>{const k=norm(e);if(!k||seen.has(k))return false;seen.add(k);return true})};
+ const dateOf=e=>String(e.watchedAt||"").slice(0,10);
+ const inPeriod=(e,start,end)=>{const d=dateOf(e);return d&&d>=start&&d<=end};
+ const years=()=>[...new Set((entries||[]).map(e=>dateOf(e).slice(0,4)).filter(y=>/^\d{4}$/.test(y)))].sort((a,b)=>b.localeCompare(a));
+ function period(){if($("awMode").value==="year"){const y=$("awYear").value;return [y+"-01-01",y+"-12-31",y]}return [$("awStart").value,$("awEnd").value,"Période personnalisée"]}
+ function makeSlides(){
+  const [start,end,label]=period();
+  if(!start||!end||start>end){$("awNote").textContent="Choisis une période valide.";return}
+  const all=unique((entries||[]).filter(e=>e.status!=="todo"&&inPeriod(e,start,end)));
+  const series=all.filter(e=>e.type==="tv"),movies=all.filter(e=>e.type!=="tv");
+  const defs=[
+   ["SÉRIES","Séries vues",series,"Toutes les séries que tu as regardées pendant cette période."],
+   ["SÉRIES","Séries vues en solo",series.filter(e=>e.company==="solo"),"Des épisodes et des saisons rien que pour toi."],
+   ["SÉRIES","Séries vues avec Emma",series.filter(e=>e.company==="duo"),"Vos séries partagées, regardées à deux."],
+   ["SÉRIES","Séries recommencées",series.filter(e=>e.status==="rewatch"),"Les histoires qui méritaient un nouveau visionnage."],
+   ["SÉRIES","Séries découvertes",series.filter(e=>e.status==="watched"),"Toutes les nouvelles séries entrées dans ta vie."],
+   ["FILMS","Films vus",movies,"Tous les films de cette période, petits et grands écrans confondus."],
+   ["FILMS","Films vus en solo",movies.filter(e=>e.company==="solo"),"Tes séances en tête-à-tête avec le cinéma."],
+   ["FILMS","Films vus avec Emma",movies.filter(e=>e.company==="duo"),"Vos films partagés, vus à deux."],
+   ["FILMS","Films revisionnés",movies.filter(e=>e.status==="rewatch"),"Les films que tu as eu envie de revoir."],
+   ["FILMS","Films découverts",movies.filter(e=>e.status==="watched"),"Les nouvelles histoires que tu as découvertes."],
+   ["FILMS","Films vus au cinéma",movies.filter(e=>!!e.cinema),"Les séances vécues dans une vraie salle obscure."]
+  ];
+  slides=defs.map(([group,title,items,desc])=>({group,title,items:unique(items),desc,label}));
+  index=0;render();
+ }
+ function posterUrl(e){const p=e.poster||"";return !p?"":/^https?:\/\//i.test(p)?p:"https://image.tmdb.org/t/p/w500"+p}
+ function render(){
+  const x=slides[index];if(!x)return;
+  $("awKicker").textContent="ALDO CINÉ · "+x.group+" · "+x.label;
+  $("awNumber").textContent=x.items.length.toLocaleString("fr-FR");
+  $("awTitle").textContent=x.title;
+  $("awDesc").textContent=x.items.length?x.desc:"Aucune œuvre enregistrée pour cette catégorie sur cette période.";
+  $("awCount").textContent=(index+1)+" / "+slides.length+" · "+x.items.length+" œuvre(s)";
+  const mosaic=$("awMosaic");mosaic.innerHTML="";
+  const art=x.items.slice(0,28);
+  if(art.length){art.forEach(e=>{const img=document.createElement("img");img.alt="";img.loading="lazy";img.src=posterUrl(e);mosaic.appendChild(img)})}
+  else mosaic.innerHTML='<div style="grid-column:1/-1;background:linear-gradient(135deg,#30223f,#111827)"></div>';
+  $("awDots").innerHTML=slides.map((_,i)=>'<span class="'+(i===index?"active":"")+'"></span>').join("");
+  $("awPrev").disabled=index===0;$("awNext").disabled=index===slides.length-1;
+ }
+ function storyBlob(slide,idx){
+  return new Promise(resolve=>{
+   const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
+   const palettes=[["#231b3b","#111827"],["#3a1c32","#12131d"],["#17334a","#111827"],["#3b2a1b","#11131b"]];
+   const pal=palettes[idx%palettes.length],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+   const imgs=slide.items.slice(0,24).map(e=>posterUrl(e)).filter(Boolean);
+   let loaded=0;const draw=()=>{
+    const cols=4,cellW=W/cols,cellH=H/6;
+    if(imgs.length){imgs.forEach((url,i)=>{const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{const x=(i%cols)*cellW,y=Math.floor(i/cols)*cellH;const scale=Math.max(cellW/im.width,cellH/im.height);ctx.globalAlpha=.38;ctx.drawImage(im,x+(cellW-im.width*scale)/2,y+(cellH-im.height*scale)/2,im.width*scale,im.height*scale);ctx.globalAlpha=1;loaded++;if(loaded===imgs.length)finish()};im.onerror=()=>{loaded++;if(loaded===imgs.length)finish()};im.src=url})}else finish();
+   };
+   const finish=()=>{
+    const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(5,6,12,.25)");shade.addColorStop(.38,"rgba(5,6,12,.62)");shade.addColorStop(1,"rgba(5,6,12,.96)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#e5d9ff";ctx.font="800 32px Arial";ctx.fillText("ALDO CINÉ  ·  WRAPPED",86,150);
+    ctx.fillStyle="#fff";ctx.font="900 250px Arial";ctx.fillText(String(slide.items.length),72,850);
+    ctx.font="800 76px Arial";wrapText(ctx,slide.title,84,1010,900,92);
+    ctx.fillStyle="#e1deea";ctx.font="34px Arial";wrapText(ctx,slide.desc,86,1330,890,52);
+    ctx.fillStyle="#c6bfd5";ctx.font="700 25px Arial";ctx.fillText(slide.label.toUpperCase()+"  ·  "+(idx+1)+"/"+slides.length,86,1780);
+    c.toBlob(blob=>resolve(blob),"image/png");
+   };
+   function wrapText(ctx,text,x,y,maxWidth,lineHeight){const words=String(text).split(" ");let line="";for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,y);line=word;y+=lineHeight}else line=test}if(line)ctx.fillText(line,x,y)}
+   draw();
+  });
+ }
+ async function exportAll(share){
+  if(!slides.length)return;
+  const btn=share?$("awShare"):$("awExport");btn.disabled=true;btn.textContent="Préparation…";
+  try{
+   const files=[];
+   for(let i=0;i<slides.length;i++){const blob=await storyBlob(slides[i],i);if(blob)files.push(new File([blob],"aldo-cine-wrapped-"+String(i+1).padStart(2,"0")+".png",{type:"image/png"}))}
+   if(share&&navigator.canShare&&navigator.canShare({files})&&navigator.share){await navigator.share({files,title:"Mon Aldo Ciné Wrapped",text:"Mon bilan cinéma et séries"})}
+   else{for(const file of files){const url=URL.createObjectURL(file),a=document.createElement("a");a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();await new Promise(r=>setTimeout(r,220));URL.revokeObjectURL(url)}$("awNote").textContent=files.length+" stories PNG préparées au format Instagram (1080 × 1920)."}
+  }catch(err){if(err.name!=="AbortError")$("awNote").textContent="Le partage n’a pas abouti. Essaie l’export des PNG."}
+  finally{btn.disabled=false;btn.textContent=share?"Partager les stories":"↓ Exporter toutes les stories"}
+ }
+ $("openAldoWrapped").onclick=()=>{page.classList.remove("hidden");document.body.style.overflow="hidden";makeSlides()};
+ $("closeAldoWrapped").onclick=()=>{page.classList.add("hidden");document.body.style.overflow=""};
+ $("awMode").onchange=()=>{$("awYearField").classList.toggle("hidden",$("awMode").value!=="year");$("awRange").classList.toggle("hidden",$("awMode").value!=="range");makeSlides()};
+ $("awYear").onchange=makeSlides;$("awStart").onchange=makeSlides;$("awEnd").onchange=makeSlides;
+ $("awPrev").onclick=()=>{if(index>0){index--;render()}};$("awNext").onclick=()=>{if(index<slides.length-1){index++;render()}};
+ $("awExport").onclick=()=>exportAll(false);$("awShare").onclick=()=>exportAll(true);
+ const ys=years();$("awYear").innerHTML=ys.map(y=>'<option value="'+y+'">'+y+'</option>').join("")||'<option value="'+new Date().getFullYear()+'">'+new Date().getFullYear()+'</option>';
+ const now=new Date();$("awYear").value=String(now.getFullYear());$("awStart").value=now.getFullYear()+"-01-01";$("awEnd").value=now.toISOString().slice(0,10);
+})();
+</script>
 </body></html>
