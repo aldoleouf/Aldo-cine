@@ -333,7 +333,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   <div class="aw-dots" id="awDots"></div>
   <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
   <div class="aw-actions"><button id="awExport">↓ Exporter toutes les stories</button><button class="secondary" id="awShare">Partager les stories</button></div>
-  <p class="aw-note" id="awNote">Les fiches utilisent les affiches de ta bibliothèque. Les images sont générées directement sur ton appareil.</p>
+  <p class="aw-note" id="awNote">Les fiches utilisent les affiches de ta bibliothèque. Toutes les affiches disponibles sont intégrées au fond ; les images qui ne chargent pas restent ignorées.</p>
  </div>
 </section>
 <script id="aldo-wrapped-script">
@@ -388,10 +388,32 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
    const palettes=[["#231b3b","#111827"],["#3a1c32","#12131d"],["#17334a","#111827"],["#3b2a1b","#11131b"]];
    const pal=palettes[idx%palettes.length],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-   const imgs=slide.items.slice(0,24).map(e=>posterUrl(e)).filter(Boolean);
-   let loaded=0;const draw=()=>{
-    const cols=4,cellW=W/cols,cellH=H/6;
-    if(imgs.length){imgs.forEach((url,i)=>{const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{const x=(i%cols)*cellW,y=Math.floor(i/cols)*cellH;const scale=Math.max(cellW/im.width,cellH/im.height);ctx.globalAlpha=.38;ctx.drawImage(im,x+(cellW-im.width*scale)/2,y+(cellH-im.height*scale)/2,im.width*scale,im.height*scale);ctx.globalAlpha=1;loaded++;if(loaded===imgs.length)finish()};im.onerror=()=>{loaded++;if(loaded===imgs.length)finish()};im.src=url})}else finish();
+   // Chaque affiche de la catégorie est intégrée : aucune limite arbitraire à 24.
+   const imgs=slide.items.map(e=>posterUrl(e)).filter(Boolean);
+   let loaded=0,finished=false;
+   const cols=Math.max(1,Math.ceil(Math.sqrt(imgs.length*W/H)));
+   const rows=Math.max(1,Math.ceil(imgs.length/cols));
+   const cellW=W/cols,cellH=H/rows;
+   const finishOnce=()=>{if(finished)return;finished=true;finish()};
+   const draw=()=>{
+    if(!imgs.length){finishOnce();return}
+    const done=()=>{loaded++;if(loaded===imgs.length)finishOnce()};
+    imgs.forEach((url,i)=>{
+     const im=new Image();
+     im.crossOrigin="anonymous";
+     im.onload=()=>{
+      const x=(i%cols)*cellW,y=Math.floor(i/cols)*cellH;
+      const scale=Math.max(cellW/im.width,cellH/im.height);
+      ctx.globalAlpha=.46;
+      ctx.save();ctx.beginPath();ctx.rect(x,y,cellW,cellH);ctx.clip();
+      ctx.drawImage(im,x+(cellW-im.width*scale)/2,y+(cellH-im.height*scale)/2,im.width*scale,im.height*scale);
+      ctx.restore();ctx.globalAlpha=1;done();
+     };
+     im.onerror=done;
+     im.src=url;
+    });
+    // Ne bloque jamais l'export si une affiche distante ne répond pas.
+    setTimeout(finishOnce,12000);
    };
    const finish=()=>{
     const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(5,6,12,.25)");shade.addColorStop(.38,"rgba(5,6,12,.62)");shade.addColorStop(1,"rgba(5,6,12,.96)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
