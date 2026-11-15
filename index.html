@@ -404,8 +404,24 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(resolve,350))));
    const canvas=await window.html2canvas(card,{
     backgroundColor:null,scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:30000,
-    onclone:cloned=>{
-     cloned.querySelectorAll("#awStory img").forEach(img=>{img.loading="eager";img.decoding="sync"});
+    onclone:async cloned=>{
+     const clonedImgs=[...cloned.querySelectorAll("#awStory img")];
+     await Promise.all(clonedImgs.map(async img=>{
+      img.loading="eager";img.decoding="sync";
+      try{
+       const source=new URL(img.src,location.href);
+       if(source.hostname==="image.tmdb.org"){
+        img.src="/api/tmdb-image?path="+encodeURIComponent(source.pathname);
+       }
+      }catch(_){}
+      if(!img.complete)await new Promise(resolve=>{
+       img.addEventListener("load",resolve,{once:true});
+       img.addEventListener("error",resolve,{once:true});
+       setTimeout(resolve,20000);
+      });
+      if(img.decode){try{await img.decode()}catch(_){}}
+      if(!img.complete||img.naturalWidth===0)throw new Error("Une affiche n’a pas pu être récupérée pour l’export. Réessaie avec une connexion stable.");
+     }));
     }
    });
    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
