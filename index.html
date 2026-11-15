@@ -310,7 +310,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
 .aw-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#08091040 0%,#080910aa 40%,#080910f5 100%)}
 .aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(25px,6vw,52px)}
 .aw-kicker{font-size:12px;font-weight:850;letter-spacing:.2em;color:#e6d5ff;text-transform:uppercase;margin-bottom:auto}
-.aw-number{display:none}.aw-title{display:none}.aw-stats{display:grid;gap:13px;margin-top:auto;padding-top:30px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:650;color:#fff}.aw-stat strong{font-size:1.2em;margin-right:7px;font-weight:900}.aw-stat.primary{font-size:clamp(21px,4.2vw,29px);font-weight:850}.aw-stat.primary strong{font-size:1.65em;letter-spacing:-.05em}.aw-desc{font-size:14px;line-height:1.45;color:#d5d3df;margin-top:30px;padding-top:16px;border-top:1px solid #ffffff35;font-style:italic}
+.aw-number{display:none}.aw-title{display:none}.aw-stats{display:grid;gap:13px;margin-top:auto;padding-top:30px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:650;color:var(--aw-text-color)}.aw-stat strong{font-size:1.2em;margin-right:7px;font-weight:900}.aw-stat.primary{font-size:clamp(21px,4.2vw,29px);font-weight:850}.aw-stat.primary strong{font-size:1.65em;letter-spacing:-.05em}.aw-desc{font-size:14px;line-height:1.45;color:#d5d3df;margin-top:30px;padding-top:16px;border-top:1px solid #ffffff35;font-style:italic}
 .aw-title{font-size:clamp(27px,7vw,48px);line-height:1.02;font-weight:850;letter-spacing:-.055em;margin:0 0 12px}
 .aw-desc{font-size:15px;line-height:1.5;color:#e0deea;max-width:500px;margin:0}
 .aw-count{font-size:12px;color:#d1c9df;margin-top:24px}
@@ -332,6 +332,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p></div></div>
   <div class="aw-dots" id="awDots"></div>
   <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
+  <div class="aw-actions"><button id="awExport">↓ Exporter les 4 fiches</button></div>
  </div>
 </section>
 <script id="aldo-wrapped-script">
@@ -368,7 +369,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
  function posterUrl(e){const p=e.poster||"";return !p?"":/^https?:\/\//i.test(p)?p:"https://image.tmdb.org/t/p/w500"+p}
  function render(){
   const x=slides[index];if(!x)return;
-  $("awDesc").style.color=x.color;
+  $("awDesc").style.color=x.color;$("awStats").style.setProperty("--aw-text-color",x.color);
   $("awStats").innerHTML=x.stats.map(([n,label],i)=>'<div class="aw-stat '+(i===0?"primary":"")+'"><strong>'+n.toLocaleString("fr-FR")+'</strong>'+label+'</div>').join("");
   $("awDesc").textContent=x.desc;
   const mosaic=$("awMosaic");mosaic.innerHTML="";
@@ -380,11 +381,11 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
  }
  function storyBlob(slide,idx){
   return new Promise(resolve=>{
-   // Même composition que la fiche affichée dans l'application : format portrait compact, pas un gabarit Story distinct.
+   // Reproduction de la fiche affichée : sans titre, statistiques et phrase finale dans la même hiérarchie.
    const W=1080,H=1500,c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
    const palettes=[["#102c3a","#09131d"],["#302044","#10111d"],["#3a2b16","#11131b"],["#3b1d2b","#11131b"]];
    const textColors=["#9ee7ff","#d9b4ff","#ffd18a","#ff9fbd"];
-   const pal=palettes[idx%palettes.length],textColor=textColors[idx%textColors.length],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+   const pal=palettes[idx%4],textColor=textColors[idx%4],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
    const imgs=slide.items.map(e=>posterUrl(e)).filter(Boolean);
    let loaded=0,finished=false;
    const cols=Math.max(1,Math.ceil(Math.sqrt(imgs.length*W/H))),rows=Math.max(1,Math.ceil(imgs.length/cols)),cellW=W/cols,cellH=H/rows;
@@ -395,30 +396,38 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
     imgs.forEach((url,i)=>{const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{const x=(i%cols)*cellW,y=Math.floor(i/cols)*cellH,scale=Math.max(cellW/im.width,cellH/im.height);ctx.globalAlpha=.42;ctx.save();ctx.beginPath();ctx.rect(x,y,cellW,cellH);ctx.clip();ctx.drawImage(im,x+(cellW-im.width*scale)/2,y+(cellH-im.height*scale)/2,im.width*scale,im.height*scale);ctx.restore();ctx.globalAlpha=1;done()};im.onerror=done;im.src=url});
     setTimeout(finishOnce,12000);
    };
+   const wrapText=(text,x,y,maxWidth,lineHeight,font)=>{ctx.font=font;const words=String(text).split(" ");let line="";for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,y);line=word;y+=lineHeight}else line=test}if(line)ctx.fillText(line,x,y);return y};
    const finish=()=>{
     const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(5,6,12,.3)");shade.addColorStop(.4,"rgba(5,6,12,.66)");shade.addColorStop(1,"rgba(5,6,12,.96)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle=textColor;ctx.font="800 30px Arial";ctx.fillText("ALDO CINÉ  ·  WRAPPED",78,110);
-    ctx.font="900 220px Arial";ctx.fillText(String(slide.items.length),70,570);
-    ctx.font="800 62px Arial";wrapText(ctx,slide.title,78,680,920,76);
-    let y=570;slide.stats.forEach(([n,label])=>{ctx.fillStyle=textColor;ctx.font="900 66px Arial";const num=String(n);ctx.fillText(num,82,y);const w=ctx.measureText(num).width;ctx.fillStyle="#fff";ctx.font="700 44px Arial";wrapText(ctx,label,105+w,y,790,52);y+=205});
-    ctx.fillStyle="#c6bfd5";ctx.font="700 24px Arial";ctx.fillText(slide.label.toUpperCase()+"  ·  "+(idx+1)+"/"+slides.length,80,1430);
+    let y=790;
+    slide.stats.forEach(([n,label],i)=>{
+     ctx.fillStyle=textColor;
+     if(i===0){ctx.font="900 118px Arial";ctx.fillText(Number(n).toLocaleString("fr-FR"),78,y);const nw=ctx.measureText(Number(n).toLocaleString("fr-FR")).width;ctx.font="850 54px Arial";wrapText(label,100+nw,y,880-nw,64,"850 54px Arial");y+=210}
+     else{ctx.font="900 68px Arial";const num=Number(n).toLocaleString("fr-FR");ctx.fillText(num,82,y);const nw=ctx.measureText(num).width;wrapText(label,105+nw,y,850-nw,54,"650 48px Arial");y+=145}
+    });
+    ctx.fillStyle=textColor;ctx.globalAlpha=.9;ctx.fillRect(78,1250,924,2);ctx.globalAlpha=1;
+    wrapText(slide.desc,78,1305,920,42,"italic 34px Arial");
     c.toBlob(blob=>resolve(blob),"image/png");
    };
-   function wrapText(ctx,text,x,y,maxWidth,lineHeight){const words=String(text).split(" ");let line="";for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,y);line=word;y+=lineHeight}else line=test}if(line)ctx.fillText(line,x,y)}
    draw();
   });
  }
- async function exportAll(share){
+ async function exportAll(){
   if(!slides.length)return;
-  const btn=share?$("awShare"):$("awExport");btn.disabled=true;btn.textContent="Préparation…";
+  const btn=$("awExport");btn.disabled=true;btn.textContent="Préparation…";
   try{
-   const files=[];
-   for(let i=0;i<slides.length;i++){const blob=await storyBlob(slides[i],i);if(blob)files.push(new File([blob],"aldo-cine-wrapped-"+String(i+1).padStart(2,"0")+".png",{type:"image/png"}))}
-   if(share&&navigator.canShare&&navigator.canShare({files})&&navigator.share){await navigator.share({files,title:"Mon Aldo Ciné Wrapped",text:"Mon bilan cinéma et séries"})}
-   else{for(const file of files){const url=URL.createObjectURL(file),a=document.createElement("a");a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();await new Promise(r=>setTimeout(r,220));URL.revokeObjectURL(url)}$("awNote").textContent=files.length+" stories PNG préparées au format Instagram (1080 × 1920)."}
-  }catch(err){if(err.name!=="AbortError")$("awNote").textContent="Le partage n’a pas abouti. Essaie l’export des PNG."}
-  finally{btn.disabled=false;btn.textContent=share?"Partager les stories":"↓ Exporter toutes les stories"}
+   for(let i=0;i<slides.length;i++){
+    const blob=await storyBlob(slides[i],i);
+    if(!blob)continue;
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="aldo-cine-wrapped-"+String(i+1).padStart(2,"0")+".png";
+    document.body.appendChild(a);a.click();a.remove();
+    await new Promise(r=>setTimeout(r,300));URL.revokeObjectURL(url);
+   }
+  }catch(err){console.error("Export Wrapped",err)}
+  finally{btn.disabled=false;btn.textContent="↓ Exporter les 4 fiches"}
  }
+ $("awExport").onclick=exportAll;
  $("openAldoWrapped").onclick=()=>{page.classList.remove("hidden");document.body.style.overflow="hidden";makeSlides()};
  $("closeAldoWrapped").onclick=()=>{page.classList.add("hidden");document.body.style.overflow=""};
  $("awMode").onchange=()=>{$("awYearField").classList.toggle("hidden",$("awMode").value!=="year");$("awRange").classList.toggle("hidden",$("awMode").value!=="range");makeSlides()};
