@@ -310,7 +310,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
 .aw-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#08091040 0%,#080910aa 40%,#080910f5 100%)}
 .aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(25px,6vw,52px)}
 .aw-kicker{font-size:12px;font-weight:850;letter-spacing:.2em;color:#e6d5ff;text-transform:uppercase;margin-bottom:auto}
-.aw-number{font-size:clamp(76px,19vw,148px);line-height:.92;font-weight:950;letter-spacing:-.09em;margin:26px 0 14px;text-shadow:0 8px 36px #0008}
+.aw-number{font-size:clamp(76px,19vw,148px);line-height:.92;font-weight:950;letter-spacing:-.09em;margin:26px 0 14px;text-shadow:0 8px 36px #0008}.aw-stats{display:grid;gap:9px;margin-top:20px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:750;color:#fff}.aw-stat strong{font-size:1.15em;margin-right:7px}
 .aw-title{font-size:clamp(27px,7vw,48px);line-height:1.02;font-weight:850;letter-spacing:-.055em;margin:0 0 12px}
 .aw-desc{font-size:15px;line-height:1.5;color:#e0deea;max-width:500px;margin:0}
 .aw-count{font-size:12px;color:#d1c9df;margin-top:24px}
@@ -329,7 +329,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    <div class="field" id="awYearField"><label for="awYear">Année</label><select id="awYear"></select></div>
    <div class="aw-range hidden" id="awRange"><div class="field"><label for="awStart">Du</label><input id="awStart" type="date"></div><div class="field"><label for="awEnd">Au</label><input id="awEnd" type="date"></div></div>
   </div>
-  <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-kicker" id="awKicker">ALDO CINÉ · TON WRAPPED</div><div class="aw-number" id="awNumber">0</div><h3 class="aw-title" id="awTitle">Tes séries</h3><p class="aw-desc" id="awDesc"></p><div class="aw-count" id="awCount"></div></div></div>
+  <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-kicker" id="awKicker">ALDO CINÉ · TON WRAPPED</div><div class="aw-number" id="awNumber">0</div><h3 class="aw-title" id="awTitle">Séries vues en 2026</h3><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p><div class="aw-count" id="awCount"></div></div></div>
   <div class="aw-dots" id="awDots"></div>
   <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
   <div class="aw-actions"><button id="awExport">↓ Exporter toutes les stories</button><button class="secondary" id="awShare">Partager les stories</button></div>
@@ -353,14 +353,18 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   const all=unique((entries||[]).filter(e=>e.status!=="todo"&&inPeriod(e,start,end)));
   const series=all.filter(e=>e.type==="tv"),movies=all.filter(e=>e.type!=="tv");
   const seriesRewatch=series.filter(e=>e.status==="rewatch"),seriesNew=series.filter(e=>e.status==="watched");
+  const seriesContinue=series.filter(e=>e.status!=="rewatch"&&e.status!=="watched");
   const movieRewatch=movies.filter(e=>e.status==="rewatch"),movieNew=movies.filter(e=>e.status==="watched"),movieCinema=movies.filter(e=>!!e.cinema);
+  const soloSeries=series.filter(e=>e.company==="solo"),duoSeries=series.filter(e=>e.company==="duo");
+  const soloMovies=movies.filter(e=>e.company==="solo"),duoMovies=movies.filter(e=>e.company==="duo");
+  const periodText=$("awMode").value==="year"?"en "+label:"sur la période";
   const defs=[
-   ["SÉRIES","Toutes tes séries",series,"Vue d’ensemble de tes séries : "+series.filter(e=>e.company==="solo").length+" en solo et "+series.filter(e=>e.company==="duo").length+" avec Emma.","#9ee7ff"],
-   ["SÉRIES","Revoir & découvrir",unique([...seriesRewatch,...seriesNew])," "+seriesRewatch.length+" série(s) revisionnée(s) · "+seriesNew.length+" découverte(s).","#d9b4ff"],
-   ["FILMS","Tous tes films",movies,"Vue d’ensemble de tes films : "+movies.filter(e=>e.company==="solo").length+" en solo et "+movies.filter(e=>e.company==="duo").length+" avec Emma.","#ffd18a"],
-   ["FILMS","Revoir, découvrir & cinéma",unique([...movieRewatch,...movieNew,...movieCinema]),movieRewatch.length+" revisionné(s) · "+movieNew.length+" découverte(s) · "+movieCinema.length+" au cinéma.","#ff9fbd"]
+   ["SÉRIES","Séries vues "+periodText,series,[[series.length,"série(s) vues "+periodText],[soloSeries.length,"en solo"],[duoSeries.length,"avec Emma"]],"#9ee7ff"],
+   ["SÉRIES","Le détail de tes séries",series,[[seriesContinue.length,"série(s) continuées"],[seriesNew.length,"découverte(s)"],[seriesRewatch.length,"recommencée(s)"]],"#d9b4ff"],
+   ["FILMS","Films vus "+periodText,movies,[[movies.length,"film(s) vus "+periodText],[duoMovies.length,"avec Emma"],[soloMovies.length,"tout seul"]],"#ffd18a"],
+   ["FILMS","Le détail de tes films",movies,[[movieRewatch.length,"revisionnage(s)"],[movieNew.length,"découverte(s)"],[movieCinema.length,"vue(s) au cinéma"]],"#ff9fbd"]
   ];
-  slides=defs.map(([group,title,items,desc,color])=>({group,title,items:unique(items),desc,label,color}));
+  slides=defs.map(([group,title,items,stats,color])=>({group,title,items:unique(items),stats,label,color}));
   index=0;render();
  }
  function posterUrl(e){const p=e.poster||"";return !p?"":/^https?:\/\//i.test(p)?p:"https://image.tmdb.org/t/p/w500"+p}
@@ -370,10 +374,11 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   ["awKicker","awNumber","awTitle","awDesc","awCount"].forEach(id=>$(id).style.color=x.color);
   $("awNumber").textContent=x.items.length.toLocaleString("fr-FR");
   $("awTitle").textContent=x.title;
-  $("awDesc").textContent=x.items.length?x.desc:"Aucune œuvre enregistrée pour cette catégorie sur cette période.";
-  $("awCount").textContent=(index+1)+" / "+slides.length+" · "+x.items.length+" œuvre(s)";
+  $("awStats").innerHTML=x.stats.map(([n,label])=>'<div class="aw-stat"><strong>'+n.toLocaleString("fr-FR")+'</strong>'+label+'</div>').join("");
+  $("awDesc").textContent="";
+  $("awCount").textContent=(index+1)+" / "+slides.length;
   const mosaic=$("awMosaic");mosaic.innerHTML="";
-  const art=x.items.slice(0,28);
+  const art=x.items;
   if(art.length){art.forEach(e=>{const img=document.createElement("img");img.alt="";img.loading="lazy";img.src=posterUrl(e);mosaic.appendChild(img)})}
   else mosaic.innerHTML='<div style="grid-column:1/-1;background:linear-gradient(135deg,#30223f,#111827)"></div>';
   $("awDots").innerHTML=slides.map((_,i)=>'<span class="'+(i===index?"active":"")+'"></span>').join("");
@@ -381,44 +386,28 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
  }
  function storyBlob(slide,idx){
   return new Promise(resolve=>{
-   const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
+   // Même composition que la fiche affichée dans l'application : format portrait compact, pas un gabarit Story distinct.
+   const W=1080,H=1500,c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
    const palettes=[["#102c3a","#09131d"],["#302044","#10111d"],["#3a2b16","#11131b"],["#3b1d2b","#11131b"]];
    const textColors=["#9ee7ff","#d9b4ff","#ffd18a","#ff9fbd"];
    const pal=palettes[idx%palettes.length],textColor=textColors[idx%textColors.length],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-   // Chaque affiche de la catégorie est intégrée : aucune limite arbitraire à 24.
    const imgs=slide.items.map(e=>posterUrl(e)).filter(Boolean);
    let loaded=0,finished=false;
-   const cols=Math.max(1,Math.ceil(Math.sqrt(imgs.length*W/H)));
-   const rows=Math.max(1,Math.ceil(imgs.length/cols));
-   const cellW=W/cols,cellH=H/rows;
+   const cols=Math.max(1,Math.ceil(Math.sqrt(imgs.length*W/H))),rows=Math.max(1,Math.ceil(imgs.length/cols)),cellW=W/cols,cellH=H/rows;
    const finishOnce=()=>{if(finished)return;finished=true;finish()};
    const draw=()=>{
     if(!imgs.length){finishOnce();return}
     const done=()=>{loaded++;if(loaded===imgs.length)finishOnce()};
-    imgs.forEach((url,i)=>{
-     const im=new Image();
-     im.crossOrigin="anonymous";
-     im.onload=()=>{
-      const x=(i%cols)*cellW,y=Math.floor(i/cols)*cellH;
-      const scale=Math.max(cellW/im.width,cellH/im.height);
-      ctx.globalAlpha=.46;
-      ctx.save();ctx.beginPath();ctx.rect(x,y,cellW,cellH);ctx.clip();
-      ctx.drawImage(im,x+(cellW-im.width*scale)/2,y+(cellH-im.height*scale)/2,im.width*scale,im.height*scale);
-      ctx.restore();ctx.globalAlpha=1;done();
-     };
-     im.onerror=done;
-     im.src=url;
-    });
-    // Ne bloque jamais l'export si une affiche distante ne répond pas.
+    imgs.forEach((url,i)=>{const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{const x=(i%cols)*cellW,y=Math.floor(i/cols)*cellH,scale=Math.max(cellW/im.width,cellH/im.height);ctx.globalAlpha=.42;ctx.save();ctx.beginPath();ctx.rect(x,y,cellW,cellH);ctx.clip();ctx.drawImage(im,x+(cellW-im.width*scale)/2,y+(cellH-im.height*scale)/2,im.width*scale,im.height*scale);ctx.restore();ctx.globalAlpha=1;done()};im.onerror=done;im.src=url});
     setTimeout(finishOnce,12000);
    };
    const finish=()=>{
-    const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(5,6,12,.25)");shade.addColorStop(.38,"rgba(5,6,12,.62)");shade.addColorStop(1,"rgba(5,6,12,.96)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle=textColor;ctx.font="800 32px Arial";ctx.fillText("ALDO CINÉ  ·  WRAPPED",86,150);
-    ctx.fillStyle=textColor;ctx.font="900 250px Arial";ctx.fillText(String(slide.items.length),72,850);
-    ctx.fillStyle=textColor;ctx.font="800 76px Arial";wrapText(ctx,slide.title,84,1010,900,92);
-    ctx.fillStyle="#e1deea";ctx.font="34px Arial";wrapText(ctx,slide.desc,86,1330,890,52);
-    ctx.fillStyle=textColor;ctx.font="700 25px Arial";ctx.fillText(slide.label.toUpperCase()+"  ·  "+(idx+1)+"/"+slides.length,86,1780);
+    const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(5,6,12,.3)");shade.addColorStop(.4,"rgba(5,6,12,.66)");shade.addColorStop(1,"rgba(5,6,12,.96)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=textColor;ctx.font="800 30px Arial";ctx.fillText("ALDO CINÉ  ·  WRAPPED",78,110);
+    ctx.font="900 220px Arial";ctx.fillText(String(slide.items.length),70,570);
+    ctx.font="800 62px Arial";wrapText(ctx,slide.title,78,680,920,76);
+    let y=850;slide.stats.forEach(([n,label])=>{ctx.fillStyle=textColor;ctx.font="900 58px Arial";const num=String(n);ctx.fillText(num,82,y);const w=ctx.measureText(num).width;ctx.fillStyle="#fff";ctx.font="700 40px Arial";wrapText(ctx,label,100+w,y,820,48);y+=145});
+    ctx.fillStyle="#c6bfd5";ctx.font="700 24px Arial";ctx.fillText(slide.label.toUpperCase()+"  ·  "+(idx+1)+"/"+slides.length,80,1430);
     c.toBlob(blob=>resolve(blob),"image/png");
    };
    function wrapText(ctx,text,x,y,maxWidth,lineHeight){const words=String(text).split(" ");let line="";for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,y);line=word;y+=lineHeight}else line=test}if(line)ctx.fillText(line,x,y)}
