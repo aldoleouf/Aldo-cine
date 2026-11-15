@@ -310,7 +310,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
 .aw-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#08091040 0%,#080910aa 40%,#080910f5 100%)}
 .aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(25px,6vw,52px)}
 .aw-kicker{font-size:12px;font-weight:850;letter-spacing:.2em;color:#e6d5ff;text-transform:uppercase;margin-bottom:auto}
-.aw-number{font-size:clamp(76px,19vw,148px);line-height:.92;font-weight:950;letter-spacing:-.09em;margin:26px 0 14px;text-shadow:0 8px 36px #0008}.aw-stats{display:grid;gap:9px;margin-top:20px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:750;color:#fff}.aw-stat strong{font-size:1.15em;margin-right:7px}
+.aw-number{display:none}.aw-title{margin:28px 0 12px}.aw-stats{display:grid;gap:9px;margin-top:20px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:750;color:#fff}.aw-stat strong{font-size:1.15em;margin-right:7px}
 .aw-title{font-size:clamp(27px,7vw,48px);line-height:1.02;font-weight:850;letter-spacing:-.055em;margin:0 0 12px}
 .aw-desc{font-size:15px;line-height:1.5;color:#e0deea;max-width:500px;margin:0}
 .aw-count{font-size:12px;color:#d1c9df;margin-top:24px}
@@ -359,10 +359,10 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   const soloMovies=movies.filter(e=>e.company==="solo"),duoMovies=movies.filter(e=>e.company==="duo");
   const periodText=$("awMode").value==="year"?"en "+label:"sur la période";
   const defs=[
-   ["SÉRIES","Séries vues "+periodText,series,[[series.length,"série(s) vues "+periodText],[soloSeries.length,"en solo"],[duoSeries.length,"avec Emma"]],"#9ee7ff"],
-   ["SÉRIES","Le détail de tes séries",series,[[seriesContinue.length,"série(s) continuées"],[seriesNew.length,"découverte(s)"],[seriesRewatch.length,"recommencée(s)"]],"#d9b4ff"],
-   ["FILMS","Films vus "+periodText,movies,[[movies.length,"film(s) vus "+periodText],[duoMovies.length,"avec Emma"],[soloMovies.length,"tout seul"]],"#ffd18a"],
-   ["FILMS","Le détail de tes films",movies,[[movieRewatch.length,"revisionnage(s)"],[movieNew.length,"découverte(s)"],[movieCinema.length,"vue(s) au cinéma"]],"#ff9fbd"]
+   ["SÉRIES","Séries vues "+periodText,series,[[series.length,"séries vues "+periodText],[soloSeries.length,"en solo"],[duoSeries.length,"avec Emma"]],"#9ee7ff"],
+   ["SÉRIES","Le détail de tes séries",series,[[seriesContinue.length,"séries continuées"],[seriesNew.length,"découvertes"],[seriesRewatch.length,"recommencées"]],"#d9b4ff"],
+   ["FILMS","Films vus "+periodText,movies,[[movies.length,"films vus "+periodText],[duoMovies.length,"avec Emma"],[soloMovies.length,"tout seul"]],"#ffd18a"],
+   ["FILMS","Le détail de tes films",movies,[[movieRewatch.length,"revisionnages"],[movieNew.length,"découvertes"],[movieCinema.length,"vus au cinéma"]],"#ff9fbd"]
   ];
   slides=defs.map(([group,title,items,stats,color])=>({group,title,items:unique(items),stats,label,color}));
   index=0;render();
@@ -406,7 +406,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
     ctx.fillStyle=textColor;ctx.font="800 30px Arial";ctx.fillText("ALDO CINÉ  ·  WRAPPED",78,110);
     ctx.font="900 220px Arial";ctx.fillText(String(slide.items.length),70,570);
     ctx.font="800 62px Arial";wrapText(ctx,slide.title,78,680,920,76);
-    let y=850;slide.stats.forEach(([n,label])=>{ctx.fillStyle=textColor;ctx.font="900 58px Arial";const num=String(n);ctx.fillText(num,82,y);const w=ctx.measureText(num).width;ctx.fillStyle="#fff";ctx.font="700 40px Arial";wrapText(ctx,label,100+w,y,820,48);y+=145});
+    let y=570;slide.stats.forEach(([n,label])=>{ctx.fillStyle=textColor;ctx.font="900 66px Arial";const num=String(n);ctx.fillText(num,82,y);const w=ctx.measureText(num).width;ctx.fillStyle="#fff";ctx.font="700 44px Arial";wrapText(ctx,label,105+w,y,790,52);y+=205});
     ctx.fillStyle="#c6bfd5";ctx.font="700 24px Arial";ctx.fillText(slide.label.toUpperCase()+"  ·  "+(idx+1)+"/"+slides.length,80,1430);
     c.toBlob(blob=>resolve(blob),"image/png");
    };
