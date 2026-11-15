@@ -308,6 +308,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
 .aw-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:7px;margin:14px 0 18px}
 .aw-gallery img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:7px;background:#21151b}
 .aw-gallery:empty{display:none}
+.aw-gallery-inside{position:relative;z-index:1;padding:0 clamp(30px,7vw,64px) clamp(24px,5vw,42px);margin:0;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}.aw-gallery-inside img{border-radius:5px}
 .aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:space-between;padding:clamp(30px,7vw,64px)}
 .aw-kicker{font-size:12px;font-weight:850;letter-spacing:.2em;color:#e6d5ff;text-transform:uppercase;margin-bottom:auto}
 .aw-number{display:none}.aw-title{display:none}.aw-stats{display:grid;gap:clamp(22px,4vh,38px);margin-top:auto;padding-top:30px}.aw-stat{font-size:clamp(22px,4.4vw,31px);line-height:1.22;font-weight:700;color:var(--aw-text-color)}.aw-stat strong{font-size:1.35em;margin-right:10px;font-weight:900}.aw-stat.primary{font-size:clamp(28px,5.4vw,39px);font-weight:850}.aw-stat.primary strong{font-size:1.85em;letter-spacing:-.06em}.aw-desc{font-size:clamp(18px,3.2vw,23px);line-height:1.5;color:#d5d3df;margin-top:clamp(38px,7vh,70px);padding-top:24px;border-top:1px solid #ffffff35;font-style:italic}
@@ -329,7 +330,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    <div class="field" id="awYearField"><label for="awYear">Année</label><select id="awYear"></select></div>
    <div class="aw-range hidden" id="awRange"><div class="field"><label for="awStart">Du</label><input id="awStart" type="date"></div><div class="field"><label for="awEnd">Au</label><input id="awEnd" type="date"></div></div>
   </div>
-  <div class="aw-story" id="awStory"><div class="aw-content"><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p></div></div>
+  <div class="aw-story" id="awStory"><div class="aw-content"><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p></div><div class="aw-gallery aw-gallery-inside" id="awGalleryInside" aria-label="Affiches dans cette fiche"></div></div>
   <div class="aw-gallery" id="awGallery" aria-label="Affiches des titres de cette fiche"></div>
   <div class="aw-dots" id="awDots"></div>
   <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
@@ -372,12 +373,14 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   $("awDesc").style.color=x.color;$("awStats").style.setProperty("--aw-text-color",x.color);
   $("awStats").innerHTML=x.stats.map(([n,label],i)=>'<div class="aw-stat '+(i===0?"primary":"")+'"><strong>'+n.toLocaleString("fr-FR")+'</strong>'+label+'</div>').join("");
   $("awDesc").textContent=x.desc;
-  const gallery=$("awGallery");gallery.innerHTML="";
-  x.items.filter(e=>posterUrl(e)).forEach(e=>{
-   const img=document.createElement("img");
-   img.alt="";img.loading="lazy";img.decoding="async";
-   img.src=posterUrl(e);img.onerror=()=>img.remove();
-   gallery.appendChild(img);
+  const galleries=[$("awGalleryInside"),$("awGallery")];
+  galleries.forEach(gallery=>{gallery.innerHTML="";
+   x.items.filter(e=>posterUrl(e)).forEach(e=>{
+    const img=document.createElement("img");
+    img.alt="";img.loading="lazy";img.decoding="async";
+    img.src=posterUrl(e);img.onerror=()=>img.remove();
+    gallery.appendChild(img);
+   });
   });
   $("awDots").innerHTML=slides.map((_,i)=>'<span class="'+(i===index?"active":"")+'"></span>').join("");
   $("awPrev").disabled=index===0;$("awNext").disabled=index===slides.length-1;
