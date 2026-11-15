@@ -375,7 +375,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   $("awDesc").textContent=x.desc;
   const mosaic=$("awMosaic");mosaic.innerHTML="";
   const art=x.items;
-  if(art.length){art.forEach(e=>{const img=document.createElement("img");img.alt="";img.loading="eager";img.decoding="async";img.crossOrigin="anonymous";img.src=posterUrl(e);mosaic.appendChild(img)})}
+  if(art.length){art.forEach(e=>{const img=document.createElement("img");img.alt="";img.loading="eager";img.decoding="async";img.src=posterUrl(e);mosaic.appendChild(img)})}
   else mosaic.innerHTML='<div style="grid-column:1/-1;background:linear-gradient(135deg,#30223f,#111827)"></div>';
   $("awDots").innerHTML=slides.map((_,i)=>'<span class="'+(i===index?"active":"")+'"></span>').join("");
   $("awPrev").disabled=index===0;$("awNext").disabled=index===slides.length-1;
@@ -392,7 +392,6 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    await Promise.all(imgs.map(async img=>{
     img.loading="eager";
     img.decoding="sync";
-    if(!img.crossOrigin)img.crossOrigin="anonymous";
     if(!img.complete)await new Promise((resolve,reject)=>{
      const done=()=>{img.removeEventListener("load",done);img.removeEventListener("error",fail);resolve()};
      const fail=()=>{img.removeEventListener("load",done);img.removeEventListener("error",fail);resolve()};
@@ -406,7 +405,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    const canvas=await window.html2canvas(card,{
     backgroundColor:null,scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:30000,
     onclone:cloned=>{
-     cloned.querySelectorAll("#awStory img").forEach(img=>{img.loading="eager";img.decoding="sync";img.crossOrigin="anonymous"});
+     cloned.querySelectorAll("#awStory img").forEach(img=>{img.loading="eager";img.decoding="sync"});
     }
    });
    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
