@@ -310,7 +310,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
 .aw-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#08091040 0%,#080910aa 40%,#080910f5 100%)}
 .aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(25px,6vw,52px)}
 .aw-kicker{font-size:12px;font-weight:850;letter-spacing:.2em;color:#e6d5ff;text-transform:uppercase;margin-bottom:auto}
-.aw-number{display:none}.aw-title{margin:28px 0 12px}.aw-stats{display:grid;gap:9px;margin-top:20px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:750;color:#fff}.aw-stat strong{font-size:1.15em;margin-right:7px}
+.aw-number{display:none}.aw-title{display:none}.aw-stats{display:grid;gap:13px;margin-top:auto;padding-top:30px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:650;color:#fff}.aw-stat strong{font-size:1.2em;margin-right:7px;font-weight:900}.aw-stat.primary{font-size:clamp(21px,4.2vw,29px);font-weight:850}.aw-stat.primary strong{font-size:1.65em;letter-spacing:-.05em}.aw-desc{font-size:14px;line-height:1.45;color:#d5d3df;margin-top:30px;padding-top:16px;border-top:1px solid #ffffff35;font-style:italic}
 .aw-title{font-size:clamp(27px,7vw,48px);line-height:1.02;font-weight:850;letter-spacing:-.055em;margin:0 0 12px}
 .aw-desc{font-size:15px;line-height:1.5;color:#e0deea;max-width:500px;margin:0}
 .aw-count{font-size:12px;color:#d1c9df;margin-top:24px}
@@ -329,11 +329,9 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    <div class="field" id="awYearField"><label for="awYear">Année</label><select id="awYear"></select></div>
    <div class="aw-range hidden" id="awRange"><div class="field"><label for="awStart">Du</label><input id="awStart" type="date"></div><div class="field"><label for="awEnd">Au</label><input id="awEnd" type="date"></div></div>
   </div>
-  <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-kicker" id="awKicker">ALDO CINÉ · TON WRAPPED</div><div class="aw-number" id="awNumber">0</div><h3 class="aw-title" id="awTitle">Séries vues en 2026</h3><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p><div class="aw-count" id="awCount"></div></div></div>
+  <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p></div></div>
   <div class="aw-dots" id="awDots"></div>
   <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
-  <div class="aw-actions"><button id="awExport">↓ Exporter toutes les stories</button><button class="secondary" id="awShare">Partager les stories</button></div>
-  <p class="aw-note" id="awNote">Les fiches utilisent les affiches de ta bibliothèque. Toutes les affiches disponibles sont intégrées au fond ; les images qui ne chargent pas restent ignorées.</p>
  </div>
 </section>
 <script id="aldo-wrapped-script">
@@ -359,24 +357,20 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   const soloMovies=movies.filter(e=>e.company==="solo"),duoMovies=movies.filter(e=>e.company==="duo");
   const periodText=$("awMode").value==="year"?"en "+label:"sur la période";
   const defs=[
-   ["SÉRIES","Séries vues "+periodText,series,[[series.length,"séries vues "+periodText],[soloSeries.length,"en solo"],[duoSeries.length,"avec Emma"]],"#9ee7ff"],
-   ["SÉRIES","Le détail de tes séries",series,[[seriesContinue.length,"séries continuées"],[seriesNew.length,"découvertes"],[seriesRewatch.length,"recommencées"]],"#d9b4ff"],
-   ["FILMS","Films vus "+periodText,movies,[[movies.length,"films vus "+periodText],[duoMovies.length,"avec Emma"],[soloMovies.length,"tout seul"]],"#ffd18a"],
-   ["FILMS","Le détail de tes films",movies,[[movieRewatch.length,"revisionnages"],[movieNew.length,"découvertes"],[movieCinema.length,"vus au cinéma"]],"#ff9fbd"]
+   ["SÉRIES",series,[[series.length,"séries vues "+periodText],[soloSeries.length,"en solo"],[duoSeries.length,"avec Emma"]],"#9ee7ff","À ce rythme-là, le canapé va finir par demander une carte de fidélité."],
+   ["SÉRIES",series,[[seriesContinue.length,"séries continuées"],[seriesNew.length,"découvertes"],[seriesRewatch.length,"recommencées"]],"#d9b4ff","Entre les découvertes et les retours, tu connais mieux les génériques que les prénoms de tes voisins."],
+   ["FILMS",movies,[[movies.length,"films vus "+periodText],[duoMovies.length,"avec Emma"],[soloMovies.length,"tout seul"]],"#ffd18a","Le pop-corn n’a pas demandé autant de congés, mais il a bien suivi."],
+   ["FILMS",movies,[[movieRewatch.length,"revisionnages"],[movieNew.length,"découvertes"],[movieCinema.length,"vus au cinéma"]],"#ff9fbd","Tu explores, tu revois, tu vas au cinéma : les plateformes commencent à prendre des notes."]
   ];
-  slides=defs.map(([group,title,items,stats,color])=>({group,title,items:unique(items),stats,label,color}));
+  slides=defs.map(([group,items,stats,color,desc])=>({group,items:unique(items),stats,label,color,desc}));
   index=0;render();
  }
  function posterUrl(e){const p=e.poster||"";return !p?"":/^https?:\/\//i.test(p)?p:"https://image.tmdb.org/t/p/w500"+p}
  function render(){
   const x=slides[index];if(!x)return;
-  $("awKicker").textContent="ALDO CINÉ · "+x.group+" · "+x.label;
-  ["awKicker","awNumber","awTitle","awDesc","awCount"].forEach(id=>$(id).style.color=x.color);
-  $("awNumber").textContent=x.items.length.toLocaleString("fr-FR");
-  $("awTitle").textContent=x.title;
-  $("awStats").innerHTML=x.stats.map(([n,label])=>'<div class="aw-stat"><strong>'+n.toLocaleString("fr-FR")+'</strong>'+label+'</div>').join("");
-  $("awDesc").textContent="";
-  $("awCount").textContent=(index+1)+" / "+slides.length;
+  $("awDesc").style.color=x.color;
+  $("awStats").innerHTML=x.stats.map(([n,label],i)=>'<div class="aw-stat '+(i===0?"primary":"")+'"><strong>'+n.toLocaleString("fr-FR")+'</strong>'+label+'</div>').join("");
+  $("awDesc").textContent=x.desc;
   const mosaic=$("awMosaic");mosaic.innerHTML="";
   const art=x.items;
   if(art.length){art.forEach(e=>{const img=document.createElement("img");img.alt="";img.loading="lazy";img.src=posterUrl(e);mosaic.appendChild(img)})}
@@ -430,8 +424,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
  $("awMode").onchange=()=>{$("awYearField").classList.toggle("hidden",$("awMode").value!=="year");$("awRange").classList.toggle("hidden",$("awMode").value!=="range");makeSlides()};
  $("awYear").onchange=makeSlides;$("awStart").onchange=makeSlides;$("awEnd").onchange=makeSlides;
  $("awPrev").onclick=()=>{if(index>0){index--;render()}};$("awNext").onclick=()=>{if(index<slides.length-1){index++;render()}};
- $("awExport").onclick=()=>exportAll(false);$("awShare").onclick=()=>exportAll(true);
- const ys=years();$("awYear").innerHTML=ys.map(y=>'<option value="'+y+'">'+y+'</option>').join("")||'<option value="'+new Date().getFullYear()+'">'+new Date().getFullYear()+'</option>';
+  const ys=years();$("awYear").innerHTML=ys.map(y=>'<option value="'+y+'">'+y+'</option>').join("")||'<option value="'+new Date().getFullYear()+'">'+new Date().getFullYear()+'</option>';
  const now=new Date();$("awYear").value=String(now.getFullYear());$("awStart").value=now.getFullYear()+"-01-01";$("awEnd").value=now.toISOString().slice(0,10);
 })();
 </script>
