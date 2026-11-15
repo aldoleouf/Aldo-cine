@@ -352,26 +352,22 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   if(!start||!end||start>end){$("awNote").textContent="Choisis une période valide.";return}
   const all=unique((entries||[]).filter(e=>e.status!=="todo"&&inPeriod(e,start,end)));
   const series=all.filter(e=>e.type==="tv"),movies=all.filter(e=>e.type!=="tv");
+  const seriesRewatch=series.filter(e=>e.status==="rewatch"),seriesNew=series.filter(e=>e.status==="watched");
+  const movieRewatch=movies.filter(e=>e.status==="rewatch"),movieNew=movies.filter(e=>e.status==="watched"),movieCinema=movies.filter(e=>!!e.cinema);
   const defs=[
-   ["SÉRIES","Séries vues",series,"Toutes les séries que tu as regardées pendant cette période."],
-   ["SÉRIES","Séries vues en solo",series.filter(e=>e.company==="solo"),"Des épisodes et des saisons rien que pour toi."],
-   ["SÉRIES","Séries vues avec Emma",series.filter(e=>e.company==="duo"),"Vos séries partagées, regardées à deux."],
-   ["SÉRIES","Séries recommencées",series.filter(e=>e.status==="rewatch"),"Les histoires qui méritaient un nouveau visionnage."],
-   ["SÉRIES","Séries découvertes",series.filter(e=>e.status==="watched"),"Toutes les nouvelles séries entrées dans ta vie."],
-   ["FILMS","Films vus",movies,"Tous les films de cette période, petits et grands écrans confondus."],
-   ["FILMS","Films vus en solo",movies.filter(e=>e.company==="solo"),"Tes séances en tête-à-tête avec le cinéma."],
-   ["FILMS","Films vus avec Emma",movies.filter(e=>e.company==="duo"),"Vos films partagés, vus à deux."],
-   ["FILMS","Films revisionnés",movies.filter(e=>e.status==="rewatch"),"Les films que tu as eu envie de revoir."],
-   ["FILMS","Films découverts",movies.filter(e=>e.status==="watched"),"Les nouvelles histoires que tu as découvertes."],
-   ["FILMS","Films vus au cinéma",movies.filter(e=>!!e.cinema),"Les séances vécues dans une vraie salle obscure."]
+   ["SÉRIES","Toutes tes séries",series,"Vue d’ensemble de tes séries : "+series.filter(e=>e.company==="solo").length+" en solo et "+series.filter(e=>e.company==="duo").length+" avec Emma.","#9ee7ff"],
+   ["SÉRIES","Revoir & découvrir",unique([...seriesRewatch,...seriesNew])," "+seriesRewatch.length+" série(s) revisionnée(s) · "+seriesNew.length+" découverte(s).","#d9b4ff"],
+   ["FILMS","Tous tes films",movies,"Vue d’ensemble de tes films : "+movies.filter(e=>e.company==="solo").length+" en solo et "+movies.filter(e=>e.company==="duo").length+" avec Emma.","#ffd18a"],
+   ["FILMS","Revoir, découvrir & cinéma",unique([...movieRewatch,...movieNew,...movieCinema]),movieRewatch.length+" revisionné(s) · "+movieNew.length+" découverte(s) · "+movieCinema.length+" au cinéma.","#ff9fbd"]
   ];
-  slides=defs.map(([group,title,items,desc])=>({group,title,items:unique(items),desc,label}));
+  slides=defs.map(([group,title,items,desc,color])=>({group,title,items:unique(items),desc,label,color}));
   index=0;render();
  }
  function posterUrl(e){const p=e.poster||"";return !p?"":/^https?:\/\//i.test(p)?p:"https://image.tmdb.org/t/p/w500"+p}
  function render(){
   const x=slides[index];if(!x)return;
   $("awKicker").textContent="ALDO CINÉ · "+x.group+" · "+x.label;
+  ["awKicker","awNumber","awTitle","awDesc","awCount"].forEach(id=>$(id).style.color=x.color);
   $("awNumber").textContent=x.items.length.toLocaleString("fr-FR");
   $("awTitle").textContent=x.title;
   $("awDesc").textContent=x.items.length?x.desc:"Aucune œuvre enregistrée pour cette catégorie sur cette période.";
@@ -386,8 +382,9 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
  function storyBlob(slide,idx){
   return new Promise(resolve=>{
    const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
-   const palettes=[["#231b3b","#111827"],["#3a1c32","#12131d"],["#17334a","#111827"],["#3b2a1b","#11131b"]];
-   const pal=palettes[idx%palettes.length],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+   const palettes=[["#102c3a","#09131d"],["#302044","#10111d"],["#3a2b16","#11131b"],["#3b1d2b","#11131b"]];
+   const textColors=["#9ee7ff","#d9b4ff","#ffd18a","#ff9fbd"];
+   const pal=palettes[idx%palettes.length],textColor=textColors[idx%textColors.length],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
    // Chaque affiche de la catégorie est intégrée : aucune limite arbitraire à 24.
    const imgs=slide.items.map(e=>posterUrl(e)).filter(Boolean);
    let loaded=0,finished=false;
@@ -417,11 +414,11 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
    };
    const finish=()=>{
     const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(5,6,12,.25)");shade.addColorStop(.38,"rgba(5,6,12,.62)");shade.addColorStop(1,"rgba(5,6,12,.96)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle="#e5d9ff";ctx.font="800 32px Arial";ctx.fillText("ALDO CINÉ  ·  WRAPPED",86,150);
-    ctx.fillStyle="#fff";ctx.font="900 250px Arial";ctx.fillText(String(slide.items.length),72,850);
-    ctx.font="800 76px Arial";wrapText(ctx,slide.title,84,1010,900,92);
+    ctx.fillStyle=textColor;ctx.font="800 32px Arial";ctx.fillText("ALDO CINÉ  ·  WRAPPED",86,150);
+    ctx.fillStyle=textColor;ctx.font="900 250px Arial";ctx.fillText(String(slide.items.length),72,850);
+    ctx.fillStyle=textColor;ctx.font="800 76px Arial";wrapText(ctx,slide.title,84,1010,900,92);
     ctx.fillStyle="#e1deea";ctx.font="34px Arial";wrapText(ctx,slide.desc,86,1330,890,52);
-    ctx.fillStyle="#c6bfd5";ctx.font="700 25px Arial";ctx.fillText(slide.label.toUpperCase()+"  ·  "+(idx+1)+"/"+slides.length,86,1780);
+    ctx.fillStyle=textColor;ctx.font="700 25px Arial";ctx.fillText(slide.label.toUpperCase()+"  ·  "+(idx+1)+"/"+slides.length,86,1780);
     c.toBlob(blob=>resolve(blob),"image/png");
    };
    function wrapText(ctx,text,x,y,maxWidth,lineHeight){const words=String(text).split(" ");let line="";for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,y);line=word;y+=lineHeight}else line=test}if(line)ctx.fillText(line,x,y)}
