@@ -304,22 +304,22 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
 .aw-controls .field{min-width:0}.aw-controls label{display:block;font-size:12px;color:#b9bac5;margin-bottom:5px}
 .aw-controls select,.aw-controls input{width:100%;background:#252630;border:1px solid #555866;border-radius:10px;padding:10px;color:#fff}
 .aw-range{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.aw-story{position:relative;min-height:min(68vh,690px);border-radius:26px;overflow:hidden;background:linear-gradient(145deg,#39213d,#12141e 65%,#251e3a);border:1px solid #ffffff24;box-shadow:0 20px 70px #0009;isolation:isolate}
+.aw-story{position:relative;min-height:min(68vh,690px);border-radius:0;overflow:hidden;background:linear-gradient(145deg,#39213d,#12141e 65%,#251e3a);border:1px solid #ffffff24;box-shadow:0 20px 70px #0009;isolation:isolate}
 .aw-mosaic{position:absolute;inset:0;z-index:-2;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:3px;opacity:.43;transform:scale(1.06)}
 .aw-mosaic img{width:100%;height:100%;object-fit:cover;filter:saturate(.8)}
 .aw-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#08091040 0%,#080910aa 40%,#080910f5 100%)}
-.aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(25px,6vw,52px)}
+.aw-content{min-height:min(68vh,690px);display:flex;flex-direction:column;justify-content:space-between;padding:clamp(30px,7vw,64px)}
 .aw-kicker{font-size:12px;font-weight:850;letter-spacing:.2em;color:#e6d5ff;text-transform:uppercase;margin-bottom:auto}
-.aw-number{display:none}.aw-title{display:none}.aw-stats{display:grid;gap:13px;margin-top:auto;padding-top:30px}.aw-stat{font-size:clamp(17px,3.5vw,23px);line-height:1.25;font-weight:650;color:var(--aw-text-color)}.aw-stat strong{font-size:1.2em;margin-right:7px;font-weight:900}.aw-stat.primary{font-size:clamp(21px,4.2vw,29px);font-weight:850}.aw-stat.primary strong{font-size:1.65em;letter-spacing:-.05em}.aw-desc{font-size:14px;line-height:1.45;color:#d5d3df;margin-top:30px;padding-top:16px;border-top:1px solid #ffffff35;font-style:italic}
+.aw-number{display:none}.aw-title{display:none}.aw-stats{display:grid;gap:clamp(22px,4vh,38px);margin-top:auto;padding-top:30px}.aw-stat{font-size:clamp(22px,4.4vw,31px);line-height:1.22;font-weight:700;color:var(--aw-text-color)}.aw-stat strong{font-size:1.35em;margin-right:10px;font-weight:900}.aw-stat.primary{font-size:clamp(28px,5.4vw,39px);font-weight:850}.aw-stat.primary strong{font-size:1.85em;letter-spacing:-.06em}.aw-desc{font-size:clamp(18px,3.2vw,23px);line-height:1.5;color:#d5d3df;margin-top:clamp(38px,7vh,70px);padding-top:24px;border-top:1px solid #ffffff35;font-style:italic}
 .aw-title{font-size:clamp(27px,7vw,48px);line-height:1.02;font-weight:850;letter-spacing:-.055em;margin:0 0 12px}
-.aw-desc{font-size:15px;line-height:1.5;color:#e0deea;max-width:500px;margin:0}
+.aw-desc{font-size:clamp(18px,3.2vw,23px);line-height:1.5;color:#e0deea;max-width:650px;margin:0}
 .aw-count{font-size:12px;color:#d1c9df;margin-top:24px}
 .aw-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0}
 .aw-nav button{flex:1}.aw-dots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:8px 0 14px}
 .aw-dots span{height:5px;width:16px;border-radius:8px;background:#555765}.aw-dots span.active{background:#fff;width:27px}
 .aw-actions{display:flex;gap:9px;flex-wrap:wrap}.aw-actions button{flex:1;min-width:150px}
 .aw-note{font-size:12px;color:#aeb0bb;margin-top:10px}
-@media(max-width:480px){#aldoWrappedPage{padding:12px 10px 24px}.aw-controls{grid-template-columns:1fr 1fr}.aw-story,.aw-content{min-height:64vh}.aw-number{font-size:clamp(72px,21vw,110px)}}
+@media(max-width:480px){#aldoWrappedPage{padding:12px 10px 24px}.aw-controls{grid-template-columns:1fr 1fr}.aw-story,.aw-content{min-height:68vh}.aw-content{padding:30px 24px}.aw-stat{font-size:clamp(21px,5.3vw,27px)}.aw-stat.primary{font-size:clamp(27px,6vw,34px)}.aw-desc{font-size:19px;line-height:1.5;margin-top:38px}}
 </style>
 <section id="aldoWrappedPage" class="hidden" aria-label="Aldo Ciné Wrapped">
  <div class="aw-shell">
@@ -332,7 +332,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p></div></div>
   <div class="aw-dots" id="awDots"></div>
   <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
-  <div class="aw-actions"><button id="awExport">↓ Exporter les 4 fiches</button></div>
+  
  </div>
 </section>
 <script id="aldo-wrapped-script">
@@ -379,55 +379,6 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   $("awDots").innerHTML=slides.map((_,i)=>'<span class="'+(i===index?"active":"")+'"></span>').join("");
   $("awPrev").disabled=index===0;$("awNext").disabled=index===slides.length-1;
  }
- function storyBlob(slide,idx){
-  return new Promise(resolve=>{
-   // Reproduction de la fiche affichée : sans titre, statistiques et phrase finale dans la même hiérarchie.
-   const W=1080,H=1500,c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
-   const palettes=[["#102c3a","#09131d"],["#302044","#10111d"],["#3a2b16","#11131b"],["#3b1d2b","#11131b"]];
-   const textColors=["#9ee7ff","#d9b4ff","#ffd18a","#ff9fbd"];
-   const pal=palettes[idx%4],textColor=textColors[idx%4],g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-   const imgs=slide.items.map(e=>posterUrl(e)).filter(Boolean);
-   let loaded=0,finished=false;
-   const cols=Math.max(1,Math.ceil(Math.sqrt(imgs.length*W/H))),rows=Math.max(1,Math.ceil(imgs.length/cols)),cellW=W/cols,cellH=H/rows;
-   const finishOnce=()=>{if(finished)return;finished=true;finish()};
-   const draw=()=>{
-    if(!imgs.length){finishOnce();return}
-    const done=()=>{loaded++;if(loaded===imgs.length)finishOnce()};
-    imgs.forEach((url,i)=>{const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{const x=(i%cols)*cellW,y=Math.floor(i/cols)*cellH,scale=Math.max(cellW/im.width,cellH/im.height);ctx.globalAlpha=.42;ctx.save();ctx.beginPath();ctx.rect(x,y,cellW,cellH);ctx.clip();ctx.drawImage(im,x+(cellW-im.width*scale)/2,y+(cellH-im.height*scale)/2,im.width*scale,im.height*scale);ctx.restore();ctx.globalAlpha=1;done()};im.onerror=done;im.src=url});
-    setTimeout(finishOnce,12000);
-   };
-   const wrapText=(text,x,y,maxWidth,lineHeight,font)=>{ctx.font=font;const words=String(text).split(" ");let line="";for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,y);line=word;y+=lineHeight}else line=test}if(line)ctx.fillText(line,x,y);return y};
-   const finish=()=>{
-    const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(5,6,12,.3)");shade.addColorStop(.4,"rgba(5,6,12,.66)");shade.addColorStop(1,"rgba(5,6,12,.96)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
-    let y=790;
-    slide.stats.forEach(([n,label],i)=>{
-     ctx.fillStyle=textColor;
-     if(i===0){ctx.font="900 118px Arial";ctx.fillText(Number(n).toLocaleString("fr-FR"),78,y);const nw=ctx.measureText(Number(n).toLocaleString("fr-FR")).width;ctx.font="850 54px Arial";wrapText(label,100+nw,y,880-nw,64,"850 54px Arial");y+=210}
-     else{ctx.font="900 68px Arial";const num=Number(n).toLocaleString("fr-FR");ctx.fillText(num,82,y);const nw=ctx.measureText(num).width;wrapText(label,105+nw,y,850-nw,54,"650 48px Arial");y+=145}
-    });
-    ctx.fillStyle=textColor;ctx.globalAlpha=.9;ctx.fillRect(78,1250,924,2);ctx.globalAlpha=1;
-    wrapText(slide.desc,78,1305,920,42,"italic 34px Arial");
-    c.toBlob(blob=>resolve(blob),"image/png");
-   };
-   draw();
-  });
- }
- async function exportAll(){
-  if(!slides.length)return;
-  const btn=$("awExport");btn.disabled=true;btn.textContent="Préparation…";
-  try{
-   for(let i=0;i<slides.length;i++){
-    const blob=await storyBlob(slides[i],i);
-    if(!blob)continue;
-    const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="aldo-cine-wrapped-"+String(i+1).padStart(2,"0")+".png";
-    document.body.appendChild(a);a.click();a.remove();
-    await new Promise(r=>setTimeout(r,300));URL.revokeObjectURL(url);
-   }
-  }catch(err){console.error("Export Wrapped",err)}
-  finally{btn.disabled=false;btn.textContent="↓ Exporter les 4 fiches"}
- }
- $("awExport").onclick=exportAll;
  $("openAldoWrapped").onclick=()=>{page.classList.remove("hidden");document.body.style.overflow="hidden";makeSlides()};
  $("closeAldoWrapped").onclick=()=>{page.classList.add("hidden");document.body.style.overflow=""};
  $("awMode").onchange=()=>{$("awYearField").classList.toggle("hidden",$("awMode").value!=="year");$("awRange").classList.toggle("hidden",$("awMode").value!=="range");makeSlides()};
