@@ -332,7 +332,7 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   <div class="aw-story" id="awStory"><div class="aw-mosaic" id="awMosaic"></div><div class="aw-shade"></div><div class="aw-content"><div class="aw-stats" id="awStats"></div><p class="aw-desc" id="awDesc"></p></div></div>
   <div class="aw-dots" id="awDots"></div>
   <div class="aw-nav"><button class="secondary" id="awPrev">← Précédente</button><button class="secondary" id="awNext">Suivante →</button></div>
-  <div class="aw-actions"><button id="awExport">↓ Exporter les 4 fiches</button></div>
+  <div class="aw-actions"><button id="awExport">↓ Exporter cette fiche</button></div>
  </div>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -380,31 +380,34 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   $("awDots").innerHTML=slides.map((_,i)=>'<span class="'+(i===index?"active":"")+'"></span>').join("");
   $("awPrev").disabled=index===0;$("awNext").disabled=index===slides.length-1;
  }
- async function exportAll(){
+ async function exportCurrent(){
   if(!slides.length)return;
-  const btn=$("awExport"),originalIndex=index;
-  btn.disabled=true;btn.textContent="Capture des fiches…";
+  const btn=$("awExport");
+  btn.disabled=true;btn.textContent="Capture en cours…";
   try{
    if(typeof window.html2canvas!=="function")throw new Error("Le module de capture n’est pas disponible. Vérifie ta connexion puis réessaie.");
-   for(let i=0;i<slides.length;i++){
-    index=i;render();
-    const card=$("awStory");
-    await document.fonts.ready;
-    const imgs=[...card.querySelectorAll("img")];
-    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;setTimeout(resolve,5000)})));
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    const canvas=await window.html2canvas(card,{backgroundColor:null,scale:2,useCORS:true,allowTaint:false,logging:false});
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
-    if(!blob)throw new Error("Impossible de créer la capture de la fiche "+(i+1));
-    const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="aldo-cine-wrapped-"+String(i+1).padStart(2,"0")+".png";
-    document.body.appendChild(a);a.click();a.remove();
-    await new Promise(resolve=>setTimeout(resolve,450));URL.revokeObjectURL(url);
-   }
+   const card=$("awStory");
+   await document.fonts.ready;
+   const imgs=[...card.querySelectorAll("img")];
+   await Promise.all(imgs.map(async img=>{
+    img.loading="eager";
+    if(!img.complete)await new Promise(resolve=>{img.addEventListener("load",resolve,{once:true});img.addEventListener("error",resolve,{once:true});setTimeout(resolve,15000)});
+    if(img.complete&&img.naturalWidth===0){
+     try{await img.decode()}catch(_){}
+    }else if(img.decode){try{await img.decode()}catch(_){}}
+   }));
+   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+   const canvas=await window.html2canvas(card,{backgroundColor:null,scale:2,useCORS:true,allowTaint:false,logging:false});
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+   if(!blob)throw new Error("Impossible de créer la capture de cette fiche.");
+   const url=URL.createObjectURL(blob),a=document.createElement("a");
+   a.href=url;a.download="aldo-cine-wrapped-"+String(index+1).padStart(2,"0")+".png";
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),1500);
   }catch(err){console.error("Capture Wrapped",err);alert(err.message||"Une erreur est survenue pendant la capture.");}
-  finally{index=originalIndex;render();btn.disabled=false;btn.textContent="↓ Exporter les 4 fiches";}
+  finally{btn.disabled=false;btn.textContent="↓ Exporter cette fiche";}
  }
- $("awExport").onclick=exportAll;
+ $("awExport").onclick=exportCurrent;
  $("openAldoWrapped").onclick=()=>{page.classList.remove("hidden");document.body.style.overflow="hidden";makeSlides()};
  $("closeAldoWrapped").onclick=()=>{page.classList.add("hidden");document.body.style.overflow=""};
  $("awMode").onchange=()=>{$("awYearField").classList.toggle("hidden",$("awMode").value!=="year");$("awRange").classList.toggle("hidden",$("awMode").value!=="range");makeSlides()};
