@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const id = String(req.query.id || "");
   const title = String(req.query.title || "").trim();
   const year = String(req.query.year || "").trim();
-  if (!["movie", "tv"].includes(type) || (!/^\\d+$/.test(id) && !title)) {
+  if (!["movie", "tv"].includes(type) || (!/^\d+$/.test(id) && !title)) {
     return res.status(400).json({ error: "A valid TMDB id or title and type are required" });
   }
 
@@ -19,19 +19,19 @@ export default async function handler(req, res) {
 
   try {
     let tmdbId = id;
-    if (!/^\\d+$/.test(tmdbId)) {
+    if (!/^\d+$/.test(tmdbId)) {
       const search = new URL(`https://api.themoviedb.org/3/search/${type}`);
       search.searchParams.set("api_key", apiKey);
       search.searchParams.set("language", "fr-FR");
       search.searchParams.set("query", title);
-      if (/^\\d{4}$/.test(year)) {
+      if (/^\d{4}$/.test(year)) {
         search.searchParams.set(type === "movie" ? "year" : "first_air_date_year", year);
       }
       const searchResponse = await fetch(search);
       if (!searchResponse.ok) return res.status(502).json({ error: "TMDB search failed" });
       const searchData = await searchResponse.json();
       const results = Array.isArray(searchData.results) ? searchData.results : [];
-      const normalize = value => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
       const exact = results.find(item => normalize(item.title || item.name) === normalize(title));
       const candidate = exact || results[0];
       if (!candidate || !candidate.id) return res.status(200).json({ genres: [], matched: false });
