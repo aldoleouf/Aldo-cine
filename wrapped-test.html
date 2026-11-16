@@ -54,15 +54,15 @@ body.capture header,body.capture .editor,body.capture .stage-top,body.capture .n
 <header><div class="brand"><div class="brandmark">✦</div><div><strong>ALDO CINÉ WRAPPED</strong><small>LABORATOIRE · VERSION TEST</small></div></div><div class="header-actions"><button class="secondary" id="backBtn">← Aldo Ciné</button><button id="captureBtn">Mode capture ↗</button></div></header>
 <main class="shell">
 <aside class="editor">
- <div class="eyebrow">01 / personnalisation</div><h1>Ton année, version cinéma.</h1><p>Un récapitulatif vivant de ta bibliothèque, pensé comme une collection de stories à partager. Les données viennent directement de ta bibliothèque Aldo Ciné sur cet appareil.</p>
+ <div class="eyebrow">01 / personnalisation</div><h1>Ton année, version cinéma.</h1><p>Un récapitulatif vivant de ta bibliothèque, pensé comme une collection de stories à partager. Importe le fichier JSON exporté depuis ta bibliothèque Aldo Ciné pour retrouver tes statistiques dans cette version de test.</p>
  <div class="field"><label for="yearSelect">Année du Wrapped</label><select id="yearSelect"></select></div>
  <div class="field"><label for="titleInput">Titre de couverture</label><input id="titleInput" value="TON ANNÉE DE CINÉMA"></div>
  <div class="field"><label for="subtitleInput">Sous-titre</label><input id="subtitleInput" value="Une année, des histoires, des émotions."></div>
  <div class="divider"></div><div class="eyebrow">02 / direction artistique</div><p>Change d'univers : les mêmes statistiques prennent une toute autre allure.</p>
  <div class="theme-grid" id="themeGrid"></div>
  <div class="divider"></div><div class="eyebrow">03 / aperçu</div><p id="dataSummary">Lecture de ta bibliothèque…</p>
- <button class="secondary" id="refreshBtn" style="width:100%">↻ Actualiser les données</button>
- <p class="hint">Prototype séparé : aucune donnée n'est modifiée. Les changements de titre et de thème restent locaux à cette page.</p>
+ <input id="importFile" type="file" accept=".json,application/json" hidden><button class="secondary" id="importBtn" style="width:100%;margin-bottom:8px">＋ Importer ma bibliothèque JSON</button><button class="secondary" id="refreshBtn" style="width:100%">↻ Relire les données locales</button>
+ <p class="hint">Prototype séparé : importe une copie de ta bibliothèque. Aucun changement ne sera enregistré dans Aldo Ciné.</p>
 </aside>
 <section class="stage-wrap">
  <div class="stage-top"><span id="slideLabel">01 — introduction</span><span id="slideCount">01 / 06</span></div>
@@ -133,6 +133,26 @@ $("refreshBtn").onclick=load;$("captureBtn").onclick=function(){document.body.cl
 $("backBtn").onclick=function(){location.href="/"};
 document.addEventListener("keydown",function(e){if(e.key==="ArrowRight")change(1);if(e.key==="ArrowLeft")change(-1);if(e.key==="Escape"&&document.body.classList.contains("capture")){$("captureBtn").click()}});
 var startX=0;$("story").addEventListener("touchstart",function(e){startX=e.touches[0].clientX},{passive:true});$("story").addEventListener("touchend",function(e){var d=e.changedTouches[0].clientX-startX;if(Math.abs(d)>45)change(d<0?1:-1)},{passive:true});
+
+$("importBtn").onclick=function(){$("importFile").click()};
+$("importFile").onchange=function(e){
+ var file=e.target.files&&e.target.files[0];if(!file)return;
+ var reader=new FileReader();
+ reader.onload=function(){
+  try{
+   var data=JSON.parse(String(reader.result||""));
+   if(!Array.isArray(data))throw new Error("format");
+   entries=data.filter(function(x){return x&&x.title});
+   var years=Array.from(new Set(entries.filter(function(x){return x.status!=="todo"&&getYear(x)}).map(getYear))).sort().reverse();
+   var current=String(new Date().getFullYear());if(years.indexOf(current)<0)years.unshift(current);
+   $("yearSelect").innerHTML='<option value="all">Toutes les années</option>'+years.map(function(y){return '<option value="'+y+'">'+y+'</option>'}).join("");
+   $("yearSelect").value=years[0]||"all";year=$("yearSelect").value;slide=0;build();
+   alert(entries.length+" titres importés pour cette session de test.");
+  }catch(err){alert("Fichier JSON invalide. Exporte la bibliothèque depuis Aldo Ciné puis réessaie.")}
+ };
+ reader.readAsText(file);e.target.value="";
+};
+
 themesUI();load();
 })();
 </script>
