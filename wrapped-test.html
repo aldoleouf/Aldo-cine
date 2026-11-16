@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090a12">
+<title>Aldo Ciné Wrapped — laboratoire</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
+:root{color-scheme:dark;--bg:#080910;--panel:#121522;--line:#292d40;--muted:#a4a8ba;--white:#f8f8ff;--accent:#ff426e;--accent2:#7b5cff}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--white);font-family:"DM Sans",sans-serif}body{background:radial-gradient(ellipse at 75% -15%,#25204b 0,transparent 40%),#080910}
+button,input,select{font:inherit}button{cursor:pointer;border:0;color:#fff;background:linear-gradient(120deg,var(--accent),var(--accent2));padding:11px 16px;border-radius:999px;font-weight:800}button.secondary{background:#202437;border:1px solid #3b4058;color:#f7f7ff}button:disabled{opacity:.35;cursor:not-allowed}
+header{max-width:1500px;margin:auto;padding:22px 28px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;gap:13px;align-items:center}.brandmark{width:45px;height:45px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(140deg,#ff426e,#725cff);font-size:23px;box-shadow:0 8px 30px #9d3cff44}.brand strong{font-size:19px;letter-spacing:-.04em}.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.15em;text-transform:uppercase}.header-actions{display:flex;gap:8px;flex-wrap:wrap}
+.shell{max-width:1500px;margin:auto;padding:0 28px 48px;display:grid;grid-template-columns:minmax(280px,370px) minmax(0,1fr);gap:28px;align-items:start}
+.editor{position:sticky;top:16px;background:#121522e8;border:1px solid var(--line);border-radius:24px;padding:20px;max-height:calc(100dvh - 32px);overflow:auto;backdrop-filter:blur(20px)}
+.eyebrow{font:11px "DM Mono",monospace;letter-spacing:.17em;color:#b9bce0;text-transform:uppercase}.editor h1{font-size:26px;line-height:1.03;letter-spacing:-.06em;margin:8px 0 8px}.editor p{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 18px}
+.field{margin:15px 0}.field label{display:block;font-size:12px;font-weight:800;color:#d9dbeb;margin-bottom:7px}.field input,.field select{width:100%;background:#090c17;border:1px solid #353a50;border-radius:12px;padding:11px 12px;color:white;outline:none}.field input:focus,.field select:focus{border-color:#a58bff;box-shadow:0 0 0 3px #8d6cff22}
+.theme-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.theme{padding:9px 6px;background:#1a1e2d;border:1px solid #363b52;border-radius:12px;text-align:center;font-size:11px;font-weight:800;color:#c9cce0}.theme.active{border-color:#ff6a92;background:#3a1c35;color:#fff;box-shadow:inset 0 0 0 1px #ff6a92}.theme i{display:block;width:100%;height:19px;border-radius:6px;margin-bottom:6px;background:var(--swatch)}
+.editor .hint{font-size:11px;color:#858ba5;margin:14px 0 0}.divider{height:1px;background:var(--line);margin:18px 0}
+.stage-wrap{min-width:0;display:flex;flex-direction:column;align-items:center;gap:15px}.stage-top{width:min(100%,760px);display:flex;justify-content:space-between;align-items:center;gap:12px}.stage-top span{font:11px "DM Mono",monospace;color:#a6abc2;letter-spacing:.12em;text-transform:uppercase}
+.story{position:relative;width:min(100%,430px);aspect-ratio:9/16;overflow:hidden;border-radius:27px;background:#151729;isolation:isolate;box-shadow:0 28px 90px #000a;border:1px solid #ffffff24;container-type:inline-size}
+.story:before{content:"";position:absolute;inset:0;z-index:-2;background:radial-gradient(circle at 20% 12%,var(--glow1),transparent 38%),radial-gradient(circle at 90% 78%,var(--glow2),transparent 40%),var(--base)}
+.story:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#05061020 0%,#05061008 35%,#050610bd 100%)}
+.story-content{height:100%;padding:8.2% 8%;display:flex;flex-direction:column;position:relative}
+.story-top{display:flex;justify-content:space-between;align-items:center;font:9px "DM Mono",monospace;letter-spacing:.13em;text-transform:uppercase;color:#ffffffb5}
+.progress{display:flex;gap:4px;margin:12px 0 0}.progress span{height:3px;border-radius:5px;background:#ffffff35;flex:1}.progress span.on{background:#fff}
+.kicker{font:10px "DM Mono",monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--soft);margin:0 0 12px}
+.story h2{font-size:clamp(34px,9.4cqw,52px);line-height:.94;letter-spacing:-.075em;margin:0 0 14px;font-weight:900;max-width:100%;overflow-wrap:anywhere}
+.story .lead{font-size:clamp(13px,3.3cqw,16px);line-height:1.45;color:#ffffffd6;margin:0;max-width:95%}
+.hero-number{font-size:clamp(88px,25cqw,125px);font-weight:900;letter-spacing:-.1em;line-height:.82;margin:12% 0 6%;text-shadow:0 8px 35px #0005}
+.story-bottom{margin-top:auto;display:flex;justify-content:space-between;align-items:end;gap:12px;color:#ffffff9c;font:9px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase}
+.poster-wall{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:5px;position:absolute;inset:0;z-index:-2;opacity:.83}
+.poster-wall img{width:100%;height:100%;object-fit:cover;min-width:0;filter:none}
+.poster-wall:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#090a16a8 0%,#090a1622 38%,#090a16f2 100%)}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:26px}.stat{padding:12px 13px;border-radius:15px;background:#090b19a8;border:1px solid #ffffff28;backdrop-filter:blur(7px)}.stat b{display:block;font-size:clamp(24px,6cqw,34px);letter-spacing:-.06em;line-height:1}.stat small{display:block;margin-top:6px;font:9px "DM Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#ffffffb8}
+.mini-wall{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:24px}.mini-wall img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:5px;background:#ffffff20}.mini-wall img:nth-child(5n+2){transform:translateY(10px)}.mini-wall img:nth-child(5n+4){transform:translateY(5px)}
+.feature-poster{width:42%;max-height:36%;object-fit:cover;border-radius:14px;align-self:center;margin:8% 0 4%;box-shadow:0 15px 35px #0008;border:1px solid #ffffff50}
+.theme-neon{--base:#09061b;--glow1:#6a16b9;--glow2:#ec2368;--soft:#ff8bcb}
+.theme-swiss{--base:#e9e8df;--glow1:#f9d448;--glow2:#ff684c;--soft:#272727;color:#161616}.theme-swiss:after{background:linear-gradient(180deg,#ffffff10,#e9e8df40 30%,#e9e8df 100%)}.theme-swiss .story-top,.theme-swiss .lead,.theme-swiss .story-bottom{color:#262626}.theme-swiss .stat{background:#ffffff9c;border-color:#1112}.theme-swiss .stat small{color:#333}.theme-swiss .kicker{color:#d33a29}
+.theme-journal{--base:#d9cbb1;--glow1:#a38b6b;--glow2:#f2e7d2;--soft:#543f2b;color:#241c15}.theme-journal:after{background:linear-gradient(180deg,#e4d8c6b0,#d9cbb1d9)}.theme-journal .story-top,.theme-journal .lead,.theme-journal .story-bottom{color:#352a20}.theme-journal .stat{background:#fff8;border-color:#705b3d55}.theme-journal .stat small{color:#584833}
+.theme-glass{--base:#0c1831;--glow1:#2b89c8;--glow2:#9b5cf6;--soft:#b9eaff}.theme-retro{--base:#10251f;--glow1:#1a9a63;--glow2:#b6d43d;--soft:#d6ff91}.theme-pop{--base:#251044;--glow1:#f3337c;--glow2:#ffbf24;--soft:#ffe37c}.theme-minimal{--base:#111319;--glow1:#464b57;--glow2:#262a36;--soft:#e6e7ec}.theme-academia{--base:#211b19;--glow1:#7c4b2f;--glow2:#5a492a;--soft:#e6cda3}.theme-vapor{--base:#180c31;--glow1:#f04dca;--glow2:#35b7df;--soft:#ffb4f0}.theme-blueprint{--base:#08213e;--glow1:#0b6eb2;--glow2:#123b70;--soft:#a9ddff}.theme-brutal{--base:#f3e9cc;--glow1:#f6bd28;--glow2:#e45b44;--soft:#1a1a1a;color:#171717}.theme-brutal:after{background:linear-gradient(180deg,#f3e9cc18,#f3e9cc 100%)}.theme-brutal .story-top,.theme-brutal .lead,.theme-brutal .story-bottom{color:#222}.theme-brutal .stat{background:#fff9;border:2px solid #111}.theme-brutal .stat small{color:#222}
+.story.theme-swiss h2,.story.theme-journal h2{font-family:"Playfair Display",serif}.story.theme-retro h2,.story.theme-blueprint h2{font-family:"DM Mono",monospace;text-transform:uppercase}.story.theme-brutal h2{text-shadow:4px 4px 0 #ef5b43}
+.nav-row{width:min(100%,760px);display:flex;align-items:center;justify-content:center;gap:15px}.nav-row button{width:44px;height:44px;padding:0;font-size:23px}.dots{display:flex;gap:6px;align-items:center}.dots button{width:7px;height:7px;padding:0;border-radius:50%;background:#51566d}.dots button.active{width:23px;background:#fff}
+.thumbs{width:min(100%,760px);display:flex;gap:8px;overflow-x:auto;padding:3px 2px 9px}.thumb{flex:0 0 78px;aspect-ratio:9/16;border:1px solid #3b4057;border-radius:9px;background:#202438;overflow:hidden;padding:0;opacity:.55}.thumb.active{opacity:1;border:2px solid #ff7197}.thumb img{width:100%;height:100%;object-fit:cover}
+.note{width:min(100%,760px);font-size:11px;color:#81879e;text-align:center;line-height:1.5}
+body.capture header,body.capture .editor,body.capture .stage-top,body.capture .nav-row,body.capture .thumbs,body.capture .note{display:none!important}body.capture .shell{display:block;padding:0;max-width:none}body.capture .stage-wrap{display:block}body.capture .story{width:min(100vw,56.25vh);height:min(100dvh,177.78vw);aspect-ratio:9/16;border-radius:0;margin:auto;border:0;box-shadow:none}body.capture .story-content{padding:8%}
+.empty{padding:35px;text-align:center;color:#c0c3d3}.empty strong{display:block;font-size:24px;margin-bottom:8px}
+@keyframes enter{from{opacity:0;transform:translateY(15px) scale(.985)}to{opacity:1;transform:none}}.story-content{animation:enter .45s cubic-bezier(.2,.7,.2,1) both}
+@media(max-width:850px){header{padding:15px 15px}.shell{display:flex;flex-direction:column-reverse;padding:0 12px 30px;gap:20px}.editor{position:static;max-height:none;width:100%;order:2}.stage-wrap{width:100%;order:1}.story{width:min(100%,390px)}.stage-top{width:min(100%,390px)}.nav-row,.thumbs,.note{width:min(100%,390px)}.header-actions button{font-size:11px;padding:9px 11px}}
+@media(max-width:420px){.brand strong{font-size:16px}.brandmark{width:38px;height:38px}.header-actions{gap:5px}.header-actions button{padding:8px 9px}.story{border-radius:18px}.editor{padding:16px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="brandmark">✦</div><div><strong>ALDO CINÉ WRAPPED</strong><small>LABORATOIRE · VERSION TEST</small></div></div><div class="header-actions"><button class="secondary" id="backBtn">← Aldo Ciné</button><button id="captureBtn">Mode capture ↗</button></div></header>
+<main class="shell">
+<aside class="editor">
+ <div class="eyebrow">01 / personnalisation</div><h1>Ton année, version cinéma.</h1><p>Un récapitulatif vivant de ta bibliothèque, pensé comme une collection de stories à partager. Les données viennent directement de ta bibliothèque Aldo Ciné sur cet appareil.</p>
+ <div class="field"><label for="yearSelect">Année du Wrapped</label><select id="yearSelect"></select></div>
+ <div class="field"><label for="titleInput">Titre de couverture</label><input id="titleInput" value="TON ANNÉE DE CINÉMA"></div>
+ <div class="field"><label for="subtitleInput">Sous-titre</label><input id="subtitleInput" value="Une année, des histoires, des émotions."></div>
+ <div class="divider"></div><div class="eyebrow">02 / direction artistique</div><p>Change d'univers : les mêmes statistiques prennent une toute autre allure.</p>
+ <div class="theme-grid" id="themeGrid"></div>
+ <div class="divider"></div><div class="eyebrow">03 / aperçu</div><p id="dataSummary">Lecture de ta bibliothèque…</p>
+ <button class="secondary" id="refreshBtn" style="width:100%">↻ Actualiser les données</button>
+ <p class="hint">Prototype séparé : aucune donnée n'est modifiée. Les changements de titre et de thème restent locaux à cette page.</p>
+</aside>
+<section class="stage-wrap">
+ <div class="stage-top"><span id="slideLabel">01 — introduction</span><span id="slideCount">01 / 06</span></div>
+ <div class="story theme-neon" id="story" aria-live="polite"><div class="empty"><strong>Chargement…</strong>Lecture de ta bibliothèque Aldo Ciné.</div></div>
+ <div class="nav-row"><button class="secondary" id="prevBtn" aria-label="Écran précédent">‹</button><div class="dots" id="dots"></div><button class="secondary" id="nextBtn" aria-label="Écran suivant">›</button></div>
+ <div class="thumbs" id="thumbs"></div>
+ <div class="note">Utilise les flèches pour parcourir les écrans. Le mode capture masque les commandes pour faire une capture d'écran verticale.</div>
+</section>
+</main>
+<script>
+(function(){
+"use strict";
+var KEY="aldoCineEntriesV2", entries=[],year="all",slide=0,theme="neon",slides=[],themes=[
+{id:"neon",name:"Neon",swatch:"linear-gradient(120deg,#7a2cff,#ff426e)"},
+{id:"swiss",name:"Swiss",swatch:"linear-gradient(120deg,#f1d84b,#f15c43)"},
+{id:"journal",name:"Journal",swatch:"linear-gradient(120deg,#d8c3a2,#8c6c4d)"},
+{id:"glass",name:"Glass",swatch:"linear-gradient(120deg,#237fae,#9b5cf6)"},
+{id:"retro",name:"8-Bit",swatch:"linear-gradient(120deg,#176c4e,#b7d83b)"},
+{id:"minimal",name:"Minimal",swatch:"linear-gradient(120deg,#282d3b,#73798c)"},
+{id:"academia",name:"Academia",swatch:"linear-gradient(120deg,#4b3026,#b58b4e)"},
+{id:"vapor",name:"Vaporwave",swatch:"linear-gradient(120deg,#f04dca,#35b7df)"},
+{id:"pop",name:"Pop Art",swatch:"linear-gradient(120deg,#fa3f79,#ffbf24)"},
+{id:"blueprint",name:"Blueprint",swatch:"linear-gradient(120deg,#0b6eb2,#123b70)"},
+{id:"brutal",name:"Brutal",swatch:"linear-gradient(120deg,#f6bd28,#e45b44)"}
+];
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function poster(p){if(!p)return "";return /^https?:\/\//i.test(p)?p:"https://image.tmdb.org/t/p/w500"+p}
+function getYear(e){return e.watchedAt?String(e.watchedAt).slice(0,4):""}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||"[]");entries=Array.isArray(x)?x:[]}catch(e){entries=[]}var years=Array.from(new Set(entries.filter(function(e){return e.status!=="todo"&&getYear(e)}).map(getYear))).sort().reverse();var current=String(new Date().getFullYear());if(years.indexOf(current)<0)years.unshift(current);$("yearSelect").innerHTML='<option value="all">Toutes les années</option>'+years.map(function(y){return '<option value="'+y+'">'+y+'</option>'}).join("");if(years.length)$("yearSelect").value=years[0];year=$("yearSelect").value;build()}
+function filtered(){return entries.filter(function(e){return e.status!=="todo"&&(year==="all"||getYear(e)===year)})}
+function count(list,fn){return list.filter(fn).length}
+function groupTitle(type){return type==="tv"?"Séries":"Films"}
+function images(list,limit){return list.filter(function(e){return e.poster}).slice(0,limit||20)}
+function wall(list){var pics=images(list,28);if(!pics.length)return "";return '<div class="poster-wall">'+pics.map(function(e){return '<img src="'+esc(poster(e.poster))+'" alt="" loading="lazy">'}).join("")+'</div>'}
+function miniWall(list){var pics=images(list,10);if(!pics.length)return '<p class="lead">Les affiches de tes prochaines découvertes commencent ici.</p>';return '<div class="mini-wall">'+pics.map(function(e){return '<img src="'+esc(poster(e.poster))+'" alt="'+esc(e.title)+'" loading="lazy">'}).join("")+'</div>'}
+function baseSlide(kicker,title,lead,content,list){return {kicker:kicker,title:title,lead:lead,content:content||"",list:list||[]}}
+function build(){
+ var all=filtered(),movies=all.filter(function(e){return e.type==="movie"}),series=all.filter(function(e){return e.type==="tv"}),discoveries=all.filter(function(e){return e.status==="watched"}),rewatches=all.filter(function(e){return e.status==="rewatch"}),episodes=all.filter(function(e){return e.status==="episodes"}),cinema=movies.filter(function(e){return !!e.cinema}),solo=all.filter(function(e){return e.company==="solo"}),duo=all.filter(function(e){return e.company==="duo"});
+ var period=year==="all"?"toutes tes années":year;
+ var total=all.length;
+ slides=[
+ {label:"Introduction",html:function(){return '<div class="story-content"><div class="story-top"><span>ALDO CINÉ · YEAR IN REVIEW</span><span>'+esc(period)+'</span></div><div class="progress" data-progress></div><div style="margin-top:auto"><p class="kicker">LE GRAND RÉCAPITULATIF</p><h2>'+esc($("titleInput").value||"TON ANNÉE DE CINÉMA")+'</h2><p class="lead">'+esc($("subtitleInput").value||"Une année, des histoires, des émotions.")+'</p><div class="hero-number">'+total+'</div><p class="lead">œuvres enregistrées dans ta cinémathèque personnelle.</p><div class="mini-wall">'+miniWall(all)+'</div></div><div class="story-bottom"><span>UNE ANNÉE EN IMAGES</span><span>GLISSE POUR DÉCOUVRIR →</span></div></div>'+wall(all)}},
+ {label:"Toutes tes séries",html:function(){return '<div class="story-content"><div class="story-top"><span>02 / LES SÉRIES</span><span>'+esc(period)+'</span></div><div class="progress" data-progress></div><div style="margin-top:auto"><p class="kicker">ÉPISODE APRÈS ÉPISODE</p><h2>TOUTES TES SÉRIES</h2><div class="hero-number">'+series.length+'</div><p class="lead">séries suivies, retrouvées ou découvertes. Des univers dans lesquels tu as pris le temps de rester.</p><div class="stat-row"><div class="stat"><b>'+count(series,function(e){return e.status==="watched"})+'</b><small>Découvertes</small></div><div class="stat"><b>'+count(series,function(e){return e.status==="rewatch"})+'</b><small>À revoir</small></div></div><div class="mini-wall">'+miniWall(series)+'</div></div><div class="story-bottom"><span>TON CÔTÉ SÉRIES</span><span>ALDO CINÉ</span></div></div>'+wall(series)}},
+ {label:"Revoir & découvrir",html:function(){return '<div class="story-content"><div class="story-top"><span>03 / LES RETROUVAILLES</span><span>'+esc(period)+'</span></div><div class="progress" data-progress></div><div style="margin-top:auto"><p class="kicker">LES HISTOIRES QUI RESTENT</p><h2>REVOIR & DÉCOUVRIR</h2><div class="stat-row"><div class="stat"><b>'+discoveries.length+'</b><small>Nouvelles découvertes</small></div><div class="stat"><b>'+rewatches.length+'</b><small>Revisionnages</small></div><div class="stat"><b>'+episodes.length+'</b><small>Nouveaux épisodes</small></div><div class="stat"><b>'+duo.length+'</b><small>À deux</small></div></div><p class="lead" style="margin-top:18px">'+(rewatches.length?"Tu as retrouvé "+rewatches.length+" œuvre(s) qui méritaient une deuxième séance.": "De nouvelles histoires à découvrir, et peut-être bientôt des classiques à retrouver.")+'</p><div class="mini-wall">'+miniWall(discoveries.concat(rewatches,episodes))+'</div></div><div class="story-bottom"><span>LES ÉMOTIONS CONTINUENT</span><span>ALDO CINÉ</span></div></div>'+wall(discoveries.concat(rewatches,episodes))}},
+ {label:"Tous tes films",html:function(){return '<div class="story-content"><div class="story-top"><span>04 / GRAND ÉCRAN</span><span>'+esc(period)+'</span></div><div class="progress" data-progress></div><div style="margin-top:auto"><p class="kicker">LUMIÈRE, CAMÉRA…</p><h2>TOUS TES FILMS</h2><div class="hero-number">'+movies.length+'</div><p class="lead">films ajoutés à ton histoire. Des découvertes, des coups de cœur et des soirées mémorables.</p><div class="stat-row"><div class="stat"><b>'+count(movies,function(e){return e.status==="watched"})+'</b><small>Découvertes</small></div><div class="stat"><b>'+count(movies,function(e){return e.status==="rewatch"})+'</b><small>Revisionnages</small></div></div><div class="mini-wall">'+miniWall(movies)+'</div></div><div class="story-bottom"><span>TON ANNÉE SUR GRAND ÉCRAN</span><span>ALDO CINÉ</span></div></div>'+wall(movies)}},
+ {label:"Revoir, découvrir & cinéma",html:function(){return '<div class="story-content"><div class="story-top"><span>05 / SORTIE EN SALLE</span><span>'+esc(period)+'</span></div><div class="progress" data-progress></div><div style="margin-top:auto"><p class="kicker">UNE EXPÉRIENCE À PART</p><h2>REVOIR, DÉCOUVRIR & CINÉMA</h2><div class="hero-number">'+cinema.length+'</div><p class="lead">films vus au cinéma. Parce que certaines histoires se vivent encore mieux sur grand écran.</p><div class="stat-row"><div class="stat"><b>'+solo.length+'</b><small>En solo</small></div><div class="stat"><b>'+duo.length+'</b><small>À deux</small></div></div><div class="mini-wall">'+miniWall(cinema.length?cinema:movies)+'</div></div><div class="story-bottom"><span>LE PLAISIR DE LA SALLE</span><span>ALDO CINÉ</span></div></div>'+wall(cinema.length?cinema:movies)}},
+ {label:"La mosaïque finale",html:function(){return '<div class="story-content"><div class="story-top"><span>06 / LE GÉNÉRIQUE</span><span>'+esc(period)+'</span></div><div class="progress" data-progress></div><div style="margin:auto 0"><p class="kicker">MERCI POUR LE VOYAGE</p><h2>À LA PROCHAINE SÉANCE.</h2><p class="lead">'+total+' œuvres, '+movies.length+' films, '+series.length+' séries. Et toujours une nouvelle histoire à découvrir.</p><div class="mini-wall">'+miniWall(all)+'</div></div><div class="story-bottom"><span>ALDO CINÉ WRAPPED</span><span>FIN.</span></div></div>'+wall(all)}}
+ ];
+ $("dataSummary").textContent=all.length+" œuvres visionnées · "+movies.length+" films · "+series.length+" séries · "+images(all,999).length+" affiches disponibles.";
+ slide=Math.min(slide,slides.length-1);render()
+}
+function render(){
+ var s=slides[slide];$("story").className="story theme-"+theme;$("story").innerHTML=s.html();$("slideLabel").textContent=String(slide+1).padStart(2,"0")+" — "+s.label;$("slideCount").textContent=String(slide+1).padStart(2,"0")+" / "+String(slides.length).padStart(2,"0");
+ var progress=$("story").querySelector("[data-progress]");if(progress)progress.innerHTML=slides.map(function(_,i){return '<span class="'+(i<=slide?"on":"")+'"></span>'}).join("");
+ $("dots").innerHTML=slides.map(function(_,i){return '<button class="'+(i===slide?"active":"")+'" data-dot="'+i+'" aria-label="Écran '+(i+1)+'"></button>'}).join("");
+ $("thumbs").innerHTML=slides.map(function(x,i){return '<button class="thumb '+(i===slide?"active":"")+'" data-thumb="'+i+'" title="'+esc(x.label)+'"><div style="height:100%;display:grid;place-items:center;font-size:10px;font-weight:900;color:#fff">'+String(i+1).padStart(2,"0")+'<br>'+esc(x.label)+'</div></button>'}).join("");
+ $("prevBtn").disabled=slide===0;$("nextBtn").disabled=slide===slides.length-1;
+ $("dots").querySelectorAll("[data-dot]").forEach(function(b){b.onclick=function(){slide=Number(b.dataset.dot);render()}});
+ $("thumbs").querySelectorAll("[data-thumb]").forEach(function(b){b.onclick=function(){slide=Number(b.dataset.thumb);render()}});
+}
+function change(n){slide=Math.max(0,Math.min(slides.length-1,slide+n));render()}
+function themesUI(){$("themeGrid").innerHTML=themes.map(function(t){return '<button class="theme '+(theme===t.id?"active":"")+'" data-theme="'+t.id+'"><i style="--swatch:'+t.swatch+'"></i>'+t.name+'</button>'}).join("");$("themeGrid").querySelectorAll("[data-theme]").forEach(function(b){b.onclick=function(){theme=b.dataset.theme;themesUI();render()}})}
+$("prevBtn").onclick=function(){change(-1)};$("nextBtn").onclick=function(){change(1)};
+$("yearSelect").onchange=function(){year=this.value;slide=0;build()};
+$("titleInput").oninput=function(){render()};$("subtitleInput").oninput=function(){render()};
+$("refreshBtn").onclick=load;$("captureBtn").onclick=function(){document.body.classList.toggle("capture");$("captureBtn").textContent=document.body.classList.contains("capture")?"Quitter la capture":"Mode capture ↗"};
+$("backBtn").onclick=function(){location.href="/"};
+document.addEventListener("keydown",function(e){if(e.key==="ArrowRight")change(1);if(e.key==="ArrowLeft")change(-1);if(e.key==="Escape"&&document.body.classList.contains("capture")){$("captureBtn").click()}});
+var startX=0;$("story").addEventListener("touchstart",function(e){startX=e.touches[0].clientX},{passive:true});$("story").addEventListener("touchend",function(e){var d=e.changedTouches[0].clientX-startX;if(Math.abs(d)>45)change(d<0?1:-1)},{passive:true});
+themesUI();load();
+})();
+</script>
+</body>
+</html>
