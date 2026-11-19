@@ -71,7 +71,8 @@ export default async function handler(req, res) {
           releaseDate: releaseDate || "",
           poster: item.poster_path || "",
           tmdbId: id,
-          overview: item.overview || ""
+          overview: item.overview || "",
+          genreIds: Array.isArray(item.genre_ids) ? item.genre_ids.filter(Number.isInteger) : []
         });
       }
     }
