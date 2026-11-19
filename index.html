@@ -207,8 +207,59 @@ $("cancelViewing").onclick=()=>{$("viewingDialog").classList.add("hidden");pendi
 $("confirmViewing").onclick=()=>{if(!pendingEntry)return;const status=$("viewingStatus").value,watchedAt=status==="todo"?"":$("viewingDate").value;if(status!=="todo"&&!watchedAt)return notify("Choisis la date du visionnage");const data=pendingEntry,record={tmdbId:data.tmdbId||"",type:data.type||"movie",title:data.title,year:data.year||"",poster:data.poster||"",releaseDate:$("viewingRelease").value||data.releaseDate||"",status,watchedAt,cinema:status==="todo"?false:$("viewingCinema").checked,company:status==="todo"?"":$("viewingCompany").value};const wasEditing=!!pendingExistingId;if(pendingExistingId){const existing=entries.find(e=>e.id===pendingExistingId);if(existing)Object.assign(existing,record)}else{entries.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),...record})}pendingEntry=null;pendingExistingId=null;$("viewingDialog").classList.add("hidden");save();confirmOpenBetaSeries(record);if(!wasEditing){notify("Fiche enregistrée")}else{notify(status==="rewatch"?"Revisionnage modifié":status==="episodes"?"Nouveaux épisodes modifiés":status==="watched"?"Visionnage modifié":"Titre modifié")}};
 $("searchBtn").onclick=async()=>{const q=$("searchQuery").value.trim();if(!q)return notify("Saisis un titre à rechercher");$("searchResults").innerHTML='<p class="muted">Recherche en cours…</p>';try{const r=await fetch("/api/search?q="+encodeURIComponent(q)+"&type="+$("searchKind").value),d=await r.json();if(!r.ok)throw Error(d.error||"Recherche impossible");const arr=d.results||[];$("searchResults").innerHTML=arr.length?'<div class="cards">'+arr.map(x=>'<article class="item"><img class="poster" src="'+(x.poster?posterSrc(x.poster):'')+'" alt=""><div class="itembody"><h3>'+esc(x.title)+'</h3><p class="muted">'+(x.type==="movie"?"Film":"Série")+(x.year?" · "+esc(x.year):"")+'</p><div class="itemactions"><button data-add="'+esc(JSON.stringify(x))+'">＋ Découverte</button><button class="secondary" data-rewatch="'+esc(JSON.stringify(x))+'">Revisionnage</button><button class="secondary" data-todo="'+esc(JSON.stringify(x))+'">Ajouter à voir</button></div></div></article>').join("")+'</div>':'<div class="empty">Aucun résultat trouvé.</div>';document.querySelectorAll("[data-add],[data-rewatch],[data-todo]").forEach(b=>b.onclick=()=>{let x;try{x=JSON.parse(b.dataset.add||b.dataset.rewatch||b.dataset.todo)}catch{return}addEntry(x,b.hasAttribute("data-todo")?"todo":b.hasAttribute("data-rewatch")?"rewatch":"watched");$("searchPanel").classList.add("hidden")})}catch(e){$("searchResults").innerHTML='<div class="empty">'+esc(e.message||"Erreur de recherche")+'</div>'}};
 $("manualAdd").onclick=()=>{const title=$("manualTitle").value.trim();if(!title)return notify("Saisis un titre");addEntry({title,type:$("manualType").value,year:$("manualYear").value,releaseDate:$("manualRelease").value},$("manualStatus").value);$("manualTitle").value="";$("manualYear").value="";$("manualRelease").value="";$("searchPanel").classList.add("hidden")};
-$("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(entries,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="aldo-cine-bibliotheque.json";a.click();URL.revokeObjectURL(a.href);notify("Export téléchargé")};$("importBtn").onclick=()=>$("importFile").click();$("importFile").onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw Error();if(confirm("Fusionner "+data.length+" éléments avec ta bibliothèque actuelle ? Les titres déjà présents seront conservés, sans changer leur catégorie.")){let added=0;const key=s=>String(s||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();let updated=0;for(const item of data){if(!item||!item.title)continue;const type=item.type||"movie";const exists=entries.find(e=>(e.type||"movie")===type&&key(e.title)===key(item.title)&&(!e.year||!item.year||String(e.year)===String(item.year)));if(!exists){entries.push({...item,id:item.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),type,status:item.status||"todo",watchedAt:item.watchedAt||"",cinema:!!item.cinema,company:item.company||""});added++;continue}const hasViewingData=!!(item.watchedAt||item.cinema||item.company||(item.status&&item.status!=="todo"));if(!hasViewingData)continue;if(item.status&&item.status!=="todo")exists.status=item.status;if(item.watchedAt)exists.watchedAt=item.watchedAt;if(typeof item.cinema==="boolean")exists.cinema=item.cinema;if(item.company)exists.company=item.company;updated++}save();notify(added+" titre(s) ajouté(s), "+updated+" fiche(s) mise(s) à jour")}}catch{notify("Fichier JSON invalide")}ev.target.value=""};
-
+$("exportBtn").onclick=()=>{
+ const blob=new Blob([JSON.stringify(entries,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="aldo-cine-bibliotheque.json";
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ notify("Export téléchargé")
+};
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=async ev=>{
+ const f=ev.target.files[0];if(!f)return;
+ try{
+  const data=JSON.parse(await f.text());
+  if(!Array.isArray(data))throw Error("format");
+  const valid=data.filter(item=>item&&typeof item==="object"&&!Array.isArray(item)&&String(item.title||"").trim());
+  if(!valid.length)throw Error("empty");
+  if(confirm("Fusionner "+valid.length+" éléments avec ta bibliothèque actuelle ? Les titres déjà présents seront conservés, sans changer leur catégorie.")){
+   let added=0,updated=0;
+   const key=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+   const makeId=()=>((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()));
+   for(const item of valid){
+    const type=item.type||"movie";
+    const tmdbId=String(item.tmdbId||"").trim();
+    const exists=entries.find(e=>{
+     if((e.type||"movie")!==type)return false;
+     const existingTmdbId=String(e.tmdbId||"").trim();
+     if(tmdbId&&existingTmdbId)return tmdbId===existingTmdbId;
+     const sameTitle=key(e.title)===key(item.title)&&key(item.title)!=="";
+     return sameTitle&&(!e.year||!item.year||String(e.year)===String(item.year));
+    });
+    if(!exists){
+     let id=item.id||makeId();
+     if(entries.some(e=>String(e.id)===String(id)))id=makeId();
+     entries.push({...item,id,type,status:item.status||"todo",watchedAt:item.watchedAt||"",cinema:typeof item.cinema==="boolean"?item.cinema:false,company:item.company||""});
+     added++;
+     continue;
+    }
+    const hasViewingData=(item.status&&item.status!=="todo")||!!item.watchedAt||item.cinema===true||!!item.company;
+    if(!hasViewingData)continue;
+    let changed=false;
+    if(item.status&&exists.status!==item.status){exists.status=item.status;changed=true}
+    if(Object.prototype.hasOwnProperty.call(item,"watchedAt")&&exists.watchedAt!==(item.watchedAt||"")){exists.watchedAt=item.watchedAt||"";changed=true}
+    if(typeof item.cinema==="boolean"&&exists.cinema!==item.cinema){exists.cinema=item.cinema;changed=true}
+    if(Object.prototype.hasOwnProperty.call(item,"company")&&exists.company!==(item.company||"")){exists.company=item.company||"";changed=true}
+    if(changed)updated++;
+   }
+   save();
+   notify(added+" titre(s) ajouté(s), "+updated+" fiche(s) mise(s) à jour")
+  }
+ }catch{notify("Fichier JSON invalide ou vide")}
+ ev.target.value="";
+};
+ 
 /* Disney+-inspired featured carousel: 8 works, with the existing library as its source. */
 let aldoHeroItems=[];
 let aldoHeroIndex=0;
