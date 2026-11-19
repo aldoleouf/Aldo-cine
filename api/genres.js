@@ -44,10 +44,20 @@ export default async function handler(req, res) {
     const response = await fetch(details);
     if (!response.ok) return res.status(response.status === 404 ? 404 : 502).json({ error: "TMDB lookup failed" });
     const data = await response.json();
+    const episodeRuntimes = Array.isArray(data.episode_run_time) ? data.episode_run_time.filter(n => Number(n) > 0) : [];
+    const episodeRuntime = episodeRuntimes.length
+      ? Math.round(episodeRuntimes.reduce((a, b) => a + Number(b), 0) / episodeRuntimes.length)
+      : Number(data.last_episode_to_air?.runtime) || 0;
     return res.status(200).json({
       genres: Array.isArray(data.genres) ? data.genres.map(g => g.name).filter(Boolean) : [],
       matched: true,
-      resolvedId: tmdbId
+      resolvedId: tmdbId,
+      runtime: type === "movie" ? Number(data.runtime) || 0 : 0,
+      episodeRuntime: type === "tv" ? episodeRuntime : 0,
+      episodes: type === "tv" ? Number(data.number_of_episodes) || 0 : 0,
+      seasons: type === "tv" ? Number(data.number_of_seasons) || 0 : 0,
+      overview: String(data.overview || ""),
+      poster: String(data.poster_path || "")
     });
   } catch {
     return res.status(502).json({ error: "Unable to contact TMDB" });
