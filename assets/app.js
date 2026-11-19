@@ -89,9 +89,9 @@ const hideTooltip = () => $("tooltip").classList.add("hidden");
 
 /* ---------- Fenêtres modales : pile, Échap, piège du focus ---------- */
 const modalStack = [];
-function openModal(el, { onClose } = {}) {
+function openModal(el, { onClose, animateClose } = {}) {
   if (modalStack.some(m => m.el === el)) return;
-  modalStack.push({ el, onClose, returnFocus: document.activeElement });
+  modalStack.push({ el, onClose, animateClose, returnFocus: document.activeElement });
   el.classList.remove("hidden");
   document.body.classList.add("modal-open");
   requestAnimationFrame(() => {
@@ -99,9 +99,11 @@ function openModal(el, { onClose } = {}) {
     if (target) target.focus({ preventScroll: true });
   });
 }
-function closeModal(el) {
+function closeModal(el, { instant = false } = {}) {
   const i = modalStack.findIndex(m => m.el === el);
   if (i < 0) return;
+  const entry = modalStack[i];
+  if (!instant && entry.animateClose && !entry.closing) { entry.closing = true; entry.animateClose(() => closeModal(el, { instant: true })); return; }
   const [m] = modalStack.splice(i, 1);
   el.classList.add("hidden");
   if (!modalStack.length) document.body.classList.remove("modal-open");
@@ -195,7 +197,7 @@ function releaseInfo(e) {
   return '<div class="release-info">Sortie : ' + esc(frDate(release)) + " · <b>dans " + plural(days, "jour", "jours") + "</b></div>";
 }
 function card(e) {
-  return '<article class="item" role="button" tabindex="0" data-open="' + esc(e.id) + '" aria-label="Ouvrir la fiche de ' + esc(e.title) + '">'
+  return '<article class="item" role="button" tabindex="0" data-tilt data-open="' + esc(e.id) + '" aria-label="Ouvrir la fiche de ' + esc(e.title) + '">'
     + '<div class="poster-wrap">' + posterImg(e) + (e.cinema && e.status !== "todo" ? '<span class="badge">🎬 Ciné</span>' : "") + "</div>"
     + '<div class="itembody"><h3>' + esc(e.title) + '</h3><div class="muted">' + typeLabel(e) + (e.year ? " · " + esc(e.year) : "") + "</div>"
     + '<span class="pill ' + esc(e.status) + '">' + (STATUS_LABELS[e.status] || "") + "</span>"
@@ -219,20 +221,55 @@ document.addEventListener("click", ev => {
   const quick = ev.target.closest("[data-quick-watched]");
   if (quick) { ev.stopPropagation(); const e = findEntry(quick.dataset.quickWatched); if (e) openViewing(e, "watched", e.id); return; }
   const c = ev.target.closest("[data-open]");
-  if (c) { const e = findEntry(c.dataset.open); if (e) openDetail(e); }
+  if (c) { const e = findEntry(c.dataset.open); if (e) openDetail(e, c); }
 });
 document.addEventListener("keydown", ev => {
   if (ev.key !== "Enter" && ev.key !== " ") return;
   const c = ev.target.closest && ev.target.closest("[data-open]");
-  if (c && ev.target === c) { ev.preventDefault(); const e = findEntry(c.dataset.open); if (e) openDetail(e); }
+  if (c && ev.target === c) { ev.preventDefault(); const e = findEntry(c.dataset.open); if (e) openDetail(e, c); }
 });
 
 /* ---------- Fiche détaillée ---------- */
 let detailId = null;
-function openDetail(e) {
-  detailId = e.id;
-  renderDetail();
-  openModal($("detailDialog"), { onClose: () => { detailId = null; } });
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const canMorph = () => typeof document.startViewTransition === "function" && !reducedMotion();
+const posterOf = el => el && el.querySelector(".poster-wrap img.poster, .poster-wrap .poster-fallback");
+/* Transition partagée : l'affiche de la carte s'agrandit pour devenir celle de la fiche, et inversement. */
+function openDetail(e, source) {
+  const dlg = $("detailDialog");
+  const fromPoster = posterOf(source);
+  const show = () => {
+    detailId = e.id;
+    renderDetail();
+    dlg.classList.remove("projecting");
+    void dlg.offsetWidth; // relance l'animation du projecteur
+    dlg.classList.add("projecting");
+    openModal(dlg, {
+      onClose: () => { detailId = null; dlg.classList.remove("projecting"); },
+      animateClose: done => {
+        const card = source && document.contains(source) ? source : document.querySelector('[data-open="' + CSS.escape(String(e.id)) + '"]');
+        const toPoster = posterOf(card), big = $("detailContent").querySelector(".detail-poster");
+        if (!canMorph() || !toPoster || !big || !isVisible(toPoster)) { done(); return; }
+        big.style.viewTransitionName = "aldo-poster";
+        const t = document.startViewTransition(() => { big.style.viewTransitionName = ""; done(); toPoster.style.viewTransitionName = "aldo-poster"; });
+        t.finished.finally(() => { toPoster.style.viewTransitionName = ""; });
+      }
+    });
+    if (window.AldoCine && AldoCine.fx) AldoCine.fx.onDetailOpen();
+  };
+  if (!canMorph() || !fromPoster) { show(); return; }
+  fromPoster.style.viewTransitionName = "aldo-poster";
+  const t = document.startViewTransition(() => {
+    fromPoster.style.viewTransitionName = "";
+    show();
+    const big = $("detailContent").querySelector(".detail-poster");
+    if (big) big.style.viewTransitionName = "aldo-poster";
+  });
+  t.finished.finally(() => { const big = $("detailContent").querySelector(".detail-poster"); if (big) big.style.viewTransitionName = ""; });
+}
+function isVisible(el) {
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
 }
 function renderDetail() {
   const e = findEntry(detailId);
@@ -252,7 +289,7 @@ function renderDetail() {
   box.innerHTML =
     '<button class="secondary modal-close" type="button" data-close aria-label="Fermer">×</button>'
     + '<div class="detail-hero" style="--detail-bg:' + (bg ? 'url(&quot;' + esc(bg) + '&quot;)' : "#26262c") + '">'
-    + (bg ? '<img class="detail-poster" src="' + esc(bg) + '" alt="">' : '<div class="detail-poster poster-fallback">' + esc(e.title) + "</div>")
+    + '<div class="detail-poster-wrap" data-tilt data-gyro>' + (bg ? '<img class="detail-poster" src="' + esc(bg) + '" alt="">' : '<div class="detail-poster poster-fallback">' + esc(e.title) + "</div>") + "</div>"
     + '<div class="detail-head"><h2 id="detailTitle">' + esc(e.title) + '</h2><div class="muted">' + typeLabel(e) + (e.year ? " · " + esc(e.year) : "") + "</div>"
     + '<div><span class="pill ' + esc(e.status) + '">' + STATUS_LABELS[e.status] + "</span>" + (e.cinema && seen ? '<span class="pill">🎬 Vu au cinéma</span>' : "") + "</div>"
     + (genres ? "<div>" + genres + "</div>" : "") + "</div></div>"
@@ -272,7 +309,10 @@ function renderDetail() {
     + "</div>";
 
   $("detailStatus").onchange = ev => changeStatus(e, ev.target.value);
-  if ($("detailCinema")) $("detailCinema").onchange = ev => { e.cinema = ev.target.checked; save(); renderDetail(); notify(e.cinema ? "Marqué comme vu au cinéma" : "Mention cinéma retirée"); };
+  if ($("detailCinema")) $("detailCinema").onchange = ev => {
+    e.cinema = ev.target.checked; save(); renderDetail();
+    if (e.cinema && window.AldoCine && AldoCine.fx) AldoCine.fx.ticket(e); else notify(e.cinema ? "Marqué comme vu au cinéma" : "Mention cinéma retirée");
+  };
   if ($("detailWatched")) $("detailWatched").onclick = () => openViewing(e, "watched", e.id);
   $("detailEdit").onclick = () => openEdit(e);
   $("detailBetaSeries").onclick = () => { copyTitle(e.title); openBetaSeries(e); };
@@ -360,7 +400,7 @@ function renderHome() {
     + counter("Séries vues", seen.filter(e => e.type === "tv").length, { type: "tv", year });
   const recent = seen.filter(e => e.watchedAt).sort((a, b) => b.watchedAt.localeCompare(a.watchedAt));
   for (const [type, target, label] of [["movie", "recentMovies", "film"], ["tv", "recentSeries", "série"]]) {
-    const list = recent.filter(e => e.type === type).slice(0, 8);
+    const list = recent.filter(e => e.type === type).slice(0, 6);
     $(target).innerHTML = list.length ? cardRow(list) : '<div class="empty">Aucun' + (type === "tv" ? "e" : "") + " " + label + " visionné" + (type === "tv" ? "e" : "") + " pour cette période.</div>";
   }
   renderHero();
@@ -388,7 +428,7 @@ function renderHero() {
   const side = (item, dir) => '<button class="ac-hero-side" type="button" data-hero-step="' + (dir === "prev" ? -1 : 1) + '" aria-label="' + (dir === "prev" ? "Œuvre précédente" : "Œuvre suivante") + '" style="' + bg(item, "linear-gradient(0deg,#08090de8,transparent 70%)") + '"></button>';
   const status = { todo: "À découvrir", rewatch: "À revoir", episodes: "Nouveaux épisodes" }[cur.status] || "Dans ta collection";
   hero.innerHTML = '<div class="ac-hero-stage">' + side(prev, "prev")
-    + '<article class="ac-hero-main" style="' + bg(cur, "linear-gradient(0deg,#08090df5 0%,#08090d8c 38%,#08090d08 78%)") + '"><div class="ac-hero-shade"></div><div class="ac-hero-copy">'
+    + '<article class="ac-hero-main" data-gyro data-tilt="soft" style="' + bg(cur, "linear-gradient(0deg,#08090df5 0%,#08090d8c 38%,#08090d08 78%)") + '"><div class="ac-hero-shade"></div><div class="ac-hero-copy">'
     + '<p class="ac-hero-kicker">✦ Ta sélection · ' + (heroIndex + 1) + " / " + n + "</p><h2>" + esc(cur.title) + "</h2>"
     + '<p class="ac-hero-meta">' + typeLabel(cur) + (cur.year ? " · " + esc(cur.year) : "") + " · " + status + ((cur.genres || []).length ? " · " + esc(cur.genres.slice(0, 2).join(", ")) : "") + "</p>"
     + (cur.overview ? '<p class="ac-hero-description">' + esc(cur.overview) + "</p>" : "")
@@ -397,6 +437,7 @@ function renderHero() {
     + '<div class="ac-hero-controls"><button type="button" data-hero-step="-1" aria-label="Œuvre précédente">‹</button><div class="ac-hero-dots">'
     + heroItems.map((item, i) => '<button type="button" data-hero-index="' + i + '" class="' + (i === heroIndex ? "active" : "") + '" aria-label="Afficher ' + esc(item.title) + '"></button>').join("")
     + '</div><button type="button" data-hero-step="1" aria-label="Œuvre suivante">›</button></div>';
+  if (window.AldoCine && AldoCine.fx) AldoCine.fx.ambient(cur.poster);
   hero.querySelectorAll("[data-hero-step]").forEach(b => b.onclick = () => { heroIndex += Number(b.dataset.heroStep); renderHero(); });
   hero.querySelectorAll("[data-hero-index]").forEach(b => b.onclick = () => { heroIndex = Number(b.dataset.heroIndex); renderHero(); });
   if (!heroTimer) heroTimer = setInterval(() => {
@@ -463,6 +504,25 @@ function drawTodo() {
     : '<div class="empty">Ta liste est vide pour le moment. Ajoute un film ou une série à découvrir.</div>';
 }
 
+/* ---------- Tickets de cinéma ---------- */
+function ticketInfo(e) {
+  let h = 2166136261;
+  const seed = String(e.id) + (e.watchedAt || "");
+  for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
+  h >>>= 0;
+  return { room: 1 + (h % 12), row: "ABCDEFGHIJKLMN"[(h >>> 4) % 14], seat: 1 + ((h >>> 9) % 24), number: String(h % 1000000).padStart(6, "0") };
+}
+function ticketHtml(e, attrs = "") {
+  const t = ticketInfo(e);
+  return '<div class="ticket"' + attrs + '><div class="ticket-main"><small>Aldo Ciné · Admit one</small><strong>' + esc(e.title) + '</strong><div class="seat">' + (e.watchedAt ? esc(frDate(e.watchedAt)) + " · " : "") + "Salle " + t.room + "</div><div class=\"seat\">Rang " + t.row + " · Place " + t.seat + '</div></div><div class="ticket-stub"><small>Salle</small><b>' + t.room + '</b><span class="no">N° ' + t.number + "</span></div></div>";
+}
+function chartTickets(list) {
+  const tickets = list.filter(e => e.cinema).sort((a, b) => (b.watchedAt || "").localeCompare(a.watchedAt || ""));
+  if (!tickets.length) return "";
+  return '<div class="panel"><div class="chart-head"><h3>🎟️ Mes tickets de cinéma</h3><span class="muted">' + plural(tickets.length, "séance", "séances") + '</span></div><div class="ticket-shelf">'
+    + tickets.map(e => ticketHtml(e, ' role="button" tabindex="0" data-open="' + esc(e.id) + '" aria-label="Ouvrir la fiche de ' + esc(e.title) + '"')).join("") + "</div></div>";
+}
+
 /* ---------- Statistiques et graphiques ---------- */
 function drawStats() {
   const yr = $("statsYear").value, year = yr === "all" ? undefined : yr;
@@ -475,7 +535,7 @@ function drawStats() {
     + counter("À deux", count(list, e => e.company === "duo"), { company: "duo", year });
 
   $("statsCharts").innerHTML = list.length
-    ? '<div class="viz">' + chartTimeline(list, yr) + '<div class="viz-grid">' + chartTime(movies, series) + chartGenres(list, year) + chartSplits(movies, list) + "</div></div>"
+    ? '<div class="viz">' + chartTickets(list) + chartTimeline(list, yr) + '<div class="viz-grid">' + chartTime(movies, series) + chartGenres(list, year) + chartSplits(movies, list) + "</div></div>"
     : '<div class="panel empty">Pas encore de visionnage sur cette période : les graphiques apparaîtront ici.</div>';
   bindChartTooltips($("statsCharts"));
 
@@ -677,7 +737,9 @@ $("confirmViewing").onclick = () => {
   save();
   if (detailId) renderDetail();
   notify(wasEditing ? "Visionnage enregistré" : "Fiche enregistrée");
-  if (saved) offerBetaSeries(saved);
+  const printed = saved && saved.cinema && status !== "todo" && !(wasEditing && data.cinema && data.watchedAt === saved.watchedAt);
+  if (printed && window.AldoCine && AldoCine.fx) AldoCine.fx.ticket(saved).then(() => offerBetaSeries(saved));
+  else if (saved) offerBetaSeries(saved);
   enrichSoon();
 };
 
@@ -881,8 +943,8 @@ function suggestionCard(item, label, key) {
   const genres = item.genres && item.genres.length ? item.genres : genresFromIds(item.genreIds);
   return '<article class="item suggestion-card">' + posterImg(item, "poster", "w342")
     + '<div class="itembody"><span class="pill">' + label + "</span><h3>" + esc(item.title || "Sans titre") + '</h3><p class="muted">' + (item.year ? esc(item.year) + " · " : "") + typeLabel(item) + (genres.length ? " · " + esc(genres.slice(0, 3).join(", ")) : "") + "</p>"
-    + '<p class="muted">' + esc(item.overview || "Une découverte à explorer.") + "</p>"
-    + '<div class="itemactions"><button type="button" data-daily-suggestion="' + key + '">＋ Ajouter dans À voir</button><a class="secondary" style="padding:10px 14px;border-radius:999px;border:1px solid #3b3b42;text-decoration:none;font-weight:700;font-size:13px" href="' + esc(tmdbUrl(item)) + '" target="_blank" rel="noopener noreferrer">TMDB ↗</a></div></div></article>';
+    + '<p class="synopsis">' + esc(item.overview || "Une découverte à explorer.") + "</p>"
+    + '<div class="itemactions"><button type="button" data-daily-suggestion="' + key + '">＋ Ajouter dans À voir</button><a class="link-button" href="' + esc(tmdbUrl(item)) + '" target="_blank" rel="noopener noreferrer">TMDB ↗</a></div></div></article>';
 }
 async function addSuggestionToTodo(item) {
   if (!(await confirmDuplicate(item))) return;
@@ -945,7 +1007,7 @@ function render() {
 }
 
 /* Interface publique utilisée par wrapped.js */
-window.AldoCine = { get entries() { return entries; }, openModal, closeModal, posterSrc, today };
+window.AldoCine = { get entries() { return entries; }, openModal, closeModal, posterSrc, today, ticketHtml, notify, go };
 
 render();
 { // Raccourcis de l'application installée (?page=todo, ?page=stats)
