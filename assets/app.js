@@ -241,11 +241,8 @@ function openDetail(e, source) {
   const show = () => {
     detailId = e.id;
     renderDetail();
-    dlg.classList.remove("projecting");
-    void dlg.offsetWidth; // relance l'animation du projecteur
-    dlg.classList.add("projecting");
     openModal(dlg, {
-      onClose: () => { detailId = null; dlg.classList.remove("projecting"); },
+      onClose: () => { detailId = null; },
       animateClose: done => {
         const card = source && document.contains(source) ? source : document.querySelector('[data-open="' + CSS.escape(String(e.id)) + '"]');
         const toPoster = posterOf(card), big = $("detailContent").querySelector(".detail-poster");
