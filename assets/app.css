@@ -315,6 +315,24 @@ button.counter[data-filter]:after{content:"↗";position:absolute;right:12px;top
 .nav-bump{animation:acBump .6s cubic-bezier(.3,1.6,.5,1)}
 @keyframes acBump{40%{transform:scale(1.25) translateY(-4px)}100%{transform:none}}
 
+/* Mise en rayon */
+.shelve-ghost{position:fixed;z-index:3500;pointer-events:none;object-fit:cover;border-radius:12px;transform-origin:0 0;margin:0}
+
+/* Tampon « VU » */
+.stamp-fx{position:fixed;z-index:3500;pointer-events:none;display:grid;place-items:center;border-radius:14px;overflow:hidden}
+.stamp{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px 6px;border:4px double #ff2d55;border-radius:10px;color:#ff2d55;background:#ff2d5514;font:900 clamp(26px,9vw,44px)/1 "Arial Black",Impact,system-ui,sans-serif;letter-spacing:.06em;text-shadow:0 0 1px #ff2d55;box-shadow:0 0 0 2px #ff2d5533;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.7'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.7'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+.stamp small{font:800 11px/1 "Courier New",monospace;letter-spacing:.12em}
+
+/* Machine à sous des suggestions */
+.item.suggestion-card .reel{position:relative;flex:0 0 150px;width:150px;height:225px;margin:14px 0 14px 14px;border-radius:12px;overflow:hidden;background:#0c0c0f;box-shadow:0 0 0 2px #2a2a31,0 0 0 4px #c9a24a55}
+.item.suggestion-card .reel:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#000c,transparent 22%,transparent 78%,#000c)}
+.item.suggestion-card .reel-strip{display:flex;flex-direction:column;will-change:transform}
+.item.suggestion-card .reel-strip>*{flex:0 0 225px;width:100%;height:225px;margin:0;border-radius:0;object-fit:cover;display:block}
+.item.suggestion-card .itembody>*{transition:opacity .45s ease,transform .45s ease}
+.item.suggestion-card.spinning .itembody>*:not(.pill){opacity:0;transform:translateY(6px)}
+.item.suggestion-card.jackpot{border-color:#c9a24a99;box-shadow:0 0 0 1px #c9a24a55,0 0 40px #c9a24a26}
+.item.suggestion-card.jackpot .reel{box-shadow:0 0 0 2px #2a2a31,0 0 0 4px #e8c25e,0 0 26px #e8c25e66}
+
 /* Responsive */
 @media(min-width:700px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(min-width:850px){.item{flex-basis:205px;width:205px}.poster,.poster-fallback{height:292px}}
@@ -354,6 +372,8 @@ button.counter[data-filter]:after{content:"↗";position:absolute;right:12px;top
   .item.suggestion-card .poster,.item.suggestion-card .poster-fallback{width:100px;height:150px;flex-basis:100px;margin:12px 0 12px 12px}
   .item.suggestion-card .itembody{padding:12px 14px}
   .item.suggestion-card h3{font-size:17px}
+  .item.suggestion-card .reel{flex-basis:100px;width:100px;height:150px;margin:12px 0 12px 12px}
+  .item.suggestion-card .reel-strip>*{flex:0 0 150px;width:100%;height:150px;margin:0}
   .item.suggestion-card .itemactions button,.item.suggestion-card .link-button{font-size:13px;padding:8px 12px}
   .item.suggestion-card .synopsis{-webkit-line-clamp:5;font-size:13px}
   .hbar{grid-template-columns:minmax(80px,110px) 1fr 30px}
@@ -365,6 +385,6 @@ button.counter[data-filter]:after{content:"↗";position:absolute;right:12px;top
 @media(max-width:360px){.bottom-nav button{font-size:9px}.bottom-nav button svg{width:21px;height:21px}}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
-  .ticket-fx{display:none!important}
+  .ticket-fx,.stamp-fx,.shelve-ghost{display:none!important}
   .item,.detail-poster-wrap,.ac-hero-main{transform:none!important}
 }

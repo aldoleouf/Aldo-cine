@@ -193,7 +193,133 @@
     wrap.animate([{ transform: "perspective(700px) rotateY(-14deg) rotateX(6deg)" }, { transform: "perspective(700px) rotateY(0) rotateX(0)" }], { duration: 900, delay: 250, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" });
   }
 
-  app.fx = { ambient, ticket, onDetailOpen };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const visiblePage = () => document.querySelector(".page:not(.hidden)");
+  const cardOf = id => { const page = visiblePage(); return page ? page.querySelector('.item[data-open="' + CSS.escape(String(id)) + '"]') : null; };
+
+  /* ---------- Mise en rayon : l'affiche vole jusqu'à sa place, les autres se poussent ---------- */
+  function snapshot() {
+    const page = visiblePage(), map = new Map();
+    if (!page) return map;
+    page.querySelectorAll(".item[data-open]").forEach(el => {
+      const row = el.closest(".cards");
+      map.set(el.dataset.open + "|" + (row ? [...page.querySelectorAll(".cards")].indexOf(row) : -1), el.getBoundingClientRect());
+    });
+    return map;
+  }
+  function pushOthers(before, newId) {
+    const page = visiblePage();
+    if (!page || !before) return;
+    const rows = [...page.querySelectorAll(".cards")];
+    page.querySelectorAll(".item[data-open]").forEach(el => {
+      if (el.dataset.open === String(newId)) return;
+      const old = before.get(el.dataset.open + "|" + rows.indexOf(el.closest(".cards")));
+      if (!old) return;
+      el.style.animation = "none"; // pas d'apparition en fondu pour les cartes déjà là
+      const now = el.getBoundingClientRect(), dx = old.left - now.left, dy = old.top - now.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      el.animate([{ transform: "translate(" + dx + "px," + dy + "px)" }, { transform: "translate(0,0)" }], { duration: 520, delay: 120, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
+    });
+  }
+  async function shelve(entry, source, before) {
+    if (reduced() || !Element.prototype.animate || !entry) return;
+    let card = cardOf(entry.id);
+    pushOthers(before, entry.id);
+    let target;
+    if (card) {
+      const r0 = card.getBoundingClientRect();
+      if (r0.top < 0 || r0.bottom > window.innerHeight) { card.scrollIntoView({ block: "center", behavior: "smooth" }); await sleep(380); }
+      card.style.opacity = "0";
+      target = (card.querySelector(".poster-wrap") || card).getBoundingClientRect();
+    } else {
+      const tab = document.querySelector('#nav [data-page="' + (entry.status === "todo" ? "todo" : "library") + '"]');
+      if (!tab) return;
+      const t = tab.getBoundingClientRect();
+      target = { left: t.left + t.width / 2 - 14, top: t.top + 4, width: 28, height: 42 };
+    }
+    const start = source ? source.rect : { left: window.innerWidth / 2 - 60, top: window.innerHeight / 2 - 90, width: 120, height: 180 };
+    const src = (source && source.src) || app.posterSrc(entry.poster, "w342");
+    const ghost = document.createElement(src ? "img" : "div");
+    if (src) ghost.src = src; else { ghost.textContent = entry.title; ghost.className = "poster-fallback"; }
+    ghost.className += " shelve-ghost";
+    Object.assign(ghost.style, { left: start.left + "px", top: start.top + "px", width: start.width + "px", height: start.height + "px" });
+    document.body.appendChild(ghost);
+    const sx = target.width / start.width, sy = target.height / start.height;
+    const dx = target.left - start.left, dy = target.top - start.top;
+    const lift = Math.min(160, Math.abs(dy) * 0.35 + 60);
+    try {
+      await ghost.animate([
+        { transform: "translate(0,0) scale(1) rotate(0)", boxShadow: "0 10px 30px #0008" },
+        { transform: "translate(" + dx * 0.45 + "px," + (dy * 0.45 - lift) + "px) scale(" + (1 + sx) / 1.6 + "," + (1 + sy) / 1.6 + ") rotate(-6deg)", boxShadow: "0 40px 60px #000c", offset: 0.5 },
+        { transform: "translate(" + dx + "px," + dy + "px) scale(" + sx + "," + sy + ") rotate(0)", boxShadow: "0 6px 14px #0006" }
+      ], { duration: 820, easing: "cubic-bezier(.45,.05,.25,1)", fill: "forwards" }).finished;
+    } finally { ghost.remove(); }
+    card = cardOf(entry.id) || card;
+    if (card && document.contains(card)) {
+      card.style.opacity = "";
+      card.style.animation = "none";
+      card.animate([{ transform: "scale(.94)" }, { transform: "scale(1.03)", offset: 0.55 }, { transform: "scale(1)" }], { duration: 420, easing: "ease-out" });
+    } else {
+      const tab = document.querySelector('#nav [data-page="' + (entry.status === "todo" ? "todo" : "library") + '"]');
+      if (tab) { tab.classList.remove("nav-bump"); void tab.offsetWidth; tab.classList.add("nav-bump"); }
+    }
+  }
+
+  /* ---------- Tampon « VU » quand un titre de la liste À voir est marqué comme vu ---------- */
+  async function stamp(id, inDetail) {
+    if (reduced() || !Element.prototype.animate) return;
+    const card = inDetail ? null : cardOf(id);
+    const target = inDetail ? document.querySelector("#detailContent .detail-poster-wrap") : card && card.querySelector(".poster-wrap");
+    if (!target) return;
+    const r = target.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight) return;
+    const el = document.createElement("div");
+    el.className = "stamp-fx";
+    el.setAttribute("aria-hidden", "true");
+    Object.assign(el.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
+    const d = new Date();
+    el.innerHTML = '<div class="stamp"><b>VU</b><small>' + String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + d.getFullYear() + "</small></div>";
+    document.body.appendChild(el);
+    const mark = el.firstChild;
+    await mark.animate([
+      { transform: "scale(2.8) rotate(-2deg)", opacity: 0, filter: "blur(4px)" },
+      { transform: "scale(.9) rotate(-14deg)", opacity: 1, filter: "blur(0)", offset: 0.7 },
+      { transform: "scale(1) rotate(-12deg)", opacity: 1, filter: "blur(0)" }
+    ], { duration: 340, easing: "cubic-bezier(.6,0,.9,.6)", fill: "forwards" }).finished;
+    // impact : la carte tremble, l'encre s'étale
+    (card || target).animate([{ transform: "translate(0,0)" }, { transform: "translate(-3px,2px)" }, { transform: "translate(3px,-1px)" }, { transform: "translate(-1px,1px)" }, { transform: "translate(0,0)" }], { duration: 240, easing: "linear" });
+    el.animate([{ boxShadow: "inset 0 0 0 0 #ff2d5500" }, { boxShadow: "inset 0 0 60px 10px #ff2d5533" }, { boxShadow: "inset 0 0 0 0 #ff2d5500" }], { duration: 600 });
+    await sleep(750);
+    if (card) {
+      el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: "forwards" });
+      await card.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.82) translateY(10px)", opacity: 0 }], { duration: 320, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" }).finished;
+      el.remove();
+    } else {
+      el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, delay: 250, fill: "forwards" }).finished.then(() => el.remove());
+    }
+  }
+
+  /* ---------- Machine à sous des suggestions du jour ---------- */
+  async function spin(grid) {
+    const cards = [...grid.querySelectorAll(".suggestion-card.spinning")];
+    await Promise.all(cards.map(async (card, i) => {
+      const reel = card.querySelector(".reel"), strip = reel && reel.querySelector(".reel-strip");
+      if (!strip) { card.classList.remove("spinning"); return; }
+      const h = reel.clientHeight, n = strip.children.length, end = -(n - 1) * h;
+      await sleep(i * 120);
+      await strip.animate([
+        { transform: "translateY(0)", filter: "blur(0)" },
+        { transform: "translateY(" + (-h * 1.2) + "px)", filter: "blur(3px)", offset: 0.12 },
+        { transform: "translateY(" + (end - h * 0.14) + "px)", filter: "blur(.6px)", offset: 0.88 },
+        { transform: "translateY(" + end + "px)", filter: "blur(0)" }
+      ], { duration: 2100 + i * 750, easing: "cubic-bezier(.3,.1,.2,1)", fill: "forwards" }).finished;
+      card.classList.remove("spinning");
+      card.classList.add("jackpot");
+      card.animate([{ transform: "scale(1)" }, { transform: "scale(1.025)", offset: 0.4 }, { transform: "scale(1)" }], { duration: 380, easing: "ease-out" });
+    }));
+  }
+
+  app.fx = { ambient, ticket, onDetailOpen, snapshot, shelve, stamp, spin };
   // l'affiche à la une a déjà été affichée avant le chargement de ce fichier
   const firstHero = app.entries.length ? document.querySelector("#appleHero .ac-hero-main") : null;
   if (firstHero) { const cur = document.querySelector("#appleHero [data-open]"); const e = cur && app.entries.find(x => String(x.id) === cur.dataset.open); if (e) ambient(e.poster); }
