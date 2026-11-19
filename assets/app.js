@@ -92,6 +92,7 @@ const modalStack = [];
 function openModal(el, { onClose, animateClose } = {}) {
   if (modalStack.some(m => m.el === el)) return;
   modalStack.push({ el, onClose, animateClose, returnFocus: document.activeElement });
+  el.style.zIndex = String(1000 + modalStack.length * 10); // la dernière fenêtre ouverte passe toujours devant
   el.classList.remove("hidden");
   document.body.classList.add("modal-open");
   requestAnimationFrame(() => {
@@ -628,7 +629,17 @@ function bindChartTooltips(root) {
 }
 
 /* ---------- Ajout d'un titre ---------- */
-let pendingEntry = null, pendingExistingId = null;
+let pendingEntry = null, pendingExistingId = null, addSource = null;
+/* Position et image de l'affiche de départ, pour la faire voler jusqu'à sa place. */
+function sourceOf(el) {
+  const reel = el && el.querySelector(".reel");
+  const img = reel ? reel.querySelector(".reel-strip > :last-child") : el && el.querySelector("img.poster, .poster-fallback");
+  if (!img) return null;
+  if (reel) { const r = reel.getBoundingClientRect(); return { rect: { left: r.left, top: r.top, width: r.width, height: r.height }, src: img.tagName === "IMG" ? img.currentSrc || img.src : "" }; }
+  const r = img.getBoundingClientRect();
+  return { rect: { left: r.left, top: r.top, width: r.width, height: r.height }, src: img.tagName === "IMG" ? img.currentSrc || img.src : "" };
+}
+const fx = () => (window.AldoCine && window.AldoCine.fx) || null;
 function openSearch() { openModal($("searchPanel")); }
 $("searchOpen").onclick = openSearch;
 $("addTodo").onclick = openSearch;
@@ -652,6 +663,7 @@ $("searchForm").onsubmit = async ev => {
         + '<div class="itemactions"><button class="small" type="button" data-result="' + i + '" data-status="watched">＋ Découverte</button><button class="secondary small" type="button" data-result="' + i + '" data-status="rewatch">Revisionnage</button><button class="secondary small" type="button" data-result="' + i + '" data-status="todo">À voir</button></div></div></article>';
     }).join("") + "</div>";
     box.querySelectorAll("[data-result]").forEach(b => b.onclick = async () => {
+      addSource = sourceOf(b.closest(".item"));
       if (await addEntry(results[Number(b.dataset.result)], b.dataset.status)) closeModal($("searchPanel"));
     });
   } catch (e) {
@@ -714,11 +726,12 @@ function openViewing(data, status, existingId) {
   openModal($("viewingDialog"), { onClose: () => { pendingEntry = null; pendingExistingId = null; } });
 }
 $("viewingStatus").onchange = syncViewingFields;
-$("confirmViewing").onclick = () => {
+$("confirmViewing").onclick = async () => {
   if (!pendingEntry) return;
   const status = $("viewingStatus").value, watchedAt = status === "todo" ? "" : $("viewingDate").value;
   if (status !== "todo" && !watchedAt) { notify("Choisis la date du visionnage"); return; }
-  const data = pendingEntry;
+  const data = pendingEntry, existingId = pendingExistingId, source = addSource;
+  addSource = null;
   const record = {
     tmdbId: data.tmdbId || "", type: data.type === "tv" ? "tv" : "movie", title: data.title, year: data.year || "",
     poster: data.poster || "", overview: String(data.overview || ""),
@@ -726,17 +739,22 @@ $("confirmViewing").onclick = () => {
     releaseDate: $("viewingRelease").value || data.releaseDate || "",
     status, watchedAt, cinema: status === "todo" ? false : $("viewingCinema").checked, company: status === "todo" ? "" : $("viewingCompany").value
   };
-  const wasEditing = !!pendingExistingId;
-  let saved;
-  if (wasEditing) { saved = findEntry(pendingExistingId); if (saved) Object.assign(saved, record); }
-  else { saved = { id: makeId(), addedAt: new Date().toISOString(), ...record }; entries.unshift(saved); }
+  const wasEditing = !!existingId;
+  const existing = wasEditing ? findEntry(existingId) : null;
   closeModal($("viewingDialog"));
+  // « À voir » → vu : un tampon s'abat sur l'affiche avant que le titre ne change de rangée
+  if (existing && existing.status === "todo" && status !== "todo" && fx()) await fx().stamp(existing.id, detailId === existing.id);
+  const snapshot = !wasEditing && fx() ? fx().snapshot() : null;
+  let saved;
+  if (existing) { saved = existing; Object.assign(saved, record); }
+  else { saved = { id: makeId(), addedAt: new Date().toISOString(), ...record }; entries.unshift(saved); }
   save();
   if (detailId) renderDetail();
   notify(wasEditing ? "Visionnage enregistré" : "Fiche enregistrée");
-  const printed = saved && saved.cinema && status !== "todo" && !(wasEditing && data.cinema && data.watchedAt === saved.watchedAt);
-  if (printed && window.AldoCine && AldoCine.fx) AldoCine.fx.ticket(saved).then(() => offerBetaSeries(saved));
-  else if (saved) offerBetaSeries(saved);
+  if (!wasEditing && fx()) await fx().shelve(saved, source, snapshot);
+  const printed = saved.cinema && status !== "todo" && !(wasEditing && data.cinema && data.watchedAt === saved.watchedAt);
+  if (printed && fx()) await fx().ticket(saved);
+  offerBetaSeries(saved);
   enrichSoon();
 };
 
@@ -936,29 +954,43 @@ $("importFile").onchange = async ev => {
 /* ---------- Suggestions du jour ---------- */
 const readSuggestionHistory = () => { try { const x = JSON.parse(localStorage.getItem(SUGGESTIONS_KEY) || "{}"); return x && typeof x === "object" ? x : {}; } catch { return {}; } };
 function suggestionHash(value) { let h = 2166136261; for (let i = 0; i < value.length; i++) { h ^= value.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
-function suggestionCard(item, label, key) {
+function suggestionCard(item, label, key, spin) {
   const genres = item.genres && item.genres.length ? item.genres : genresFromIds(item.genreIds);
-  return '<article class="item suggestion-card">' + posterImg(item, "poster", "w342")
+  return '<article class="item suggestion-card' + (spin ? " spinning" : "") + '">' + (spin ? reelHtml(item, key === "movie" ? 14 : 19) : posterImg(item, "poster", "w342"))
     + '<div class="itembody"><span class="pill">' + label + "</span><h3>" + esc(item.title || "Sans titre") + '</h3><p class="muted">' + (item.year ? esc(item.year) + " · " : "") + typeLabel(item) + (genres.length ? " · " + esc(genres.slice(0, 3).join(", ")) : "") + "</p>"
     + '<p class="synopsis">' + esc(item.overview || "Une découverte à explorer.") + "</p>"
     + '<div class="itemactions"><button type="button" data-daily-suggestion="' + key + '">＋ Ajouter dans À voir</button><a class="link-button" href="' + esc(tmdbUrl(item)) + '" target="_blank" rel="noopener noreferrer">TMDB ↗</a></div></div></article>';
 }
-async function addSuggestionToTodo(item) {
+async function addSuggestionToTodo(item, source) {
   if (!(await confirmDuplicate(item))) return;
-  entries.unshift({
+  const record = {
     id: makeId(), addedAt: new Date().toISOString(), tmdbId: item.tmdbId || "", type: item.type === "tv" ? "tv" : "movie", title: item.title || "", year: item.year || "",
     poster: item.poster || "", overview: String(item.overview || ""), genres: item.genres && item.genres.length ? item.genres : genresFromIds(item.genreIds),
     releaseDate: item.releaseDate || "", status: "todo", watchedAt: "", cinema: false, company: ""
-  });
+  };
+  entries.unshift(record);
   save();
   notify("Ajouté dans À voir");
+  if (fx()) fx().shelve(record, source, null);
   enrichSoon();
 }
+/* Rouleau de la machine à sous : des affiches de ta bibliothèque, puis la suggestion du jour. */
+function reelHtml(item, length) {
+  const pool = entries.filter(e => e.poster || e.title);
+  const picks = [];
+  for (let i = 0; i < length - 1; i++) picks.push(pool.length ? pool[Math.floor(Math.random() * pool.length)] : { title: "?" });
+  return '<div class="reel" data-reel aria-hidden="true"><div class="reel-strip">' + picks.map(e => posterImg(e, "reel-poster", "w185")).join("") + posterImg(item, "reel-poster", "w342") + "</div></div>";
+}
 function renderDailySuggestions(pair) {
-  $("suggestionsStatus").textContent = "Tes deux idées du jour";
+  // La machine à sous ne tourne qu'à la première visite de la journée.
+  const day = today();
+  let spin = false;
+  try { spin = !!fx() && localStorage.getItem("aldoCineSlotDay") !== day && !window.matchMedia("(prefers-reduced-motion: reduce)").matches; if (spin) localStorage.setItem("aldoCineSlotDay", day); } catch { spin = false; }
+  $("suggestionsStatus").textContent = spin ? "🎰 Tirage du jour…" : "Tes deux idées du jour";
   const grid = $("suggestionsGrid");
-  grid.innerHTML = suggestionCard(pair.movie, "🎬 Film du jour", "movie") + suggestionCard(pair.tv, "📺 Série du jour", "tv");
-  grid.querySelectorAll("[data-daily-suggestion]").forEach(b => b.onclick = () => addSuggestionToTodo(b.dataset.dailySuggestion === "movie" ? pair.movie : pair.tv));
+  grid.innerHTML = suggestionCard(pair.movie, "🎬 Film du jour", "movie", spin) + suggestionCard(pair.tv, "📺 Série du jour", "tv", spin);
+  grid.querySelectorAll("[data-daily-suggestion]").forEach(b => b.onclick = () => addSuggestionToTodo(b.dataset.dailySuggestion === "movie" ? pair.movie : pair.tv, sourceOf(b.closest(".item"))));
+  if (spin) fx().spin(grid).then(() => { $("suggestionsStatus").textContent = "Tes deux idées du jour"; });
 }
 async function drawSuggestions() {
   const status = $("suggestionsStatus"), grid = $("suggestionsGrid"), day = today();
