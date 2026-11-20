@@ -3,8 +3,8 @@
    - fichiers du site : réseau d'abord, cache en secours ;
    - affiches TMDB : cache d'abord (limité à 400 images) ;
    - /api : jamais mis en cache. */
-const VERSION = "aldo-cine-v3";
-const SHELL = ["/", "/assets/app.css", "/assets/app.js", "/assets/wrapped.js", "/assets/effects.js", "/manifest.json", "/icons/icon.svg", "/icons/icon-192.png"];
+const VERSION = "aldo-cine-v4";
+const SHELL = ["/", "/assets/app.css", "/assets/app.js", "/assets/wrapped.js", "/assets/effects.js", "/assets/wrapped-link.js", "/manifest.json", "/icons/icon.svg", "/icons/icon-192.png"];
 const IMAGES = "aldo-cine-images";
 
 self.addEventListener("install", event => {
