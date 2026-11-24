@@ -245,9 +245,12 @@ function openDetail(e, source) {
     openModal(dlg, {
       onClose: () => { detailId = null; },
       animateClose: done => {
+        // une série s'éteint comme une vieille télé ; un film rejoint sa carte, ou s'éteint aussi s'il ne peut pas
+        const tv = () => { const px = window.AldoCine && AldoCine.pixel; if (px) px.crtOff(dlg.querySelector(".modal-card"), done); else done(); };
+        if (e.type === "tv") { tv(); return; }
         const card = source && document.contains(source) ? source : document.querySelector('[data-open="' + CSS.escape(String(e.id)) + '"]');
         const toPoster = posterOf(card), big = $("detailContent").querySelector(".detail-poster");
-        if (!canMorph() || !toPoster || !big || !isVisible(toPoster)) { done(); return; }
+        if (!canMorph() || !toPoster || !big || !isVisible(toPoster)) { tv(); return; }
         big.style.viewTransitionName = "aldo-poster";
         const t = document.startViewTransition(() => { big.style.viewTransitionName = ""; done(); toPoster.style.viewTransitionName = "aldo-poster"; });
         t.finished.finally(() => { toPoster.style.viewTransitionName = ""; });

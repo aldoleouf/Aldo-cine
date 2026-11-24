@@ -60,6 +60,7 @@
     const color = src ? await dominantColor(src) : null;
     if (token !== ambientToken) return;
     root.style.setProperty("--ambient", color || "#303039");
+    document.dispatchEvent(new CustomEvent("aldo:ambient", { detail: color }));
   }
 
   /* ---------- Effet de profondeur à la souris ---------- */
