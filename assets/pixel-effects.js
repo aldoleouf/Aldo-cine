@@ -1,7 +1,7 @@
 /* Aldo Ciné — effets pixel art (pixelfx, voir assets/pixelfx.js) :
    - rideau à lamelles qui s'ouvre au lancement de l'application ;
    - rayons de lumière sur l'affiche à la une, teintés par sa couleur d'ambiance ;
-   - pluie d'étoiles filantes derrière les diapos d'Aldo Wrapped.
+   - extinction façon vieille télé quand on ferme la fiche d'une série.
    Rien ne s'anime si l'appareil demande de réduire les animations. */
 "use strict";
 (() => {
@@ -129,23 +129,55 @@
     new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; if (heroOnScreen && rays) rays.start(); }).observe(hero);
   }
   if (home) new MutationObserver(() => { if (rays && !home.classList.contains("hidden")) rays.start(); }).observe(home, { attributes: true, attributeFilter: ["class"] });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (rays) rays.start(); if (stars) stars.start(); } });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (rays) rays.start(); } });
 
-  /* ---------- Étoiles filantes dans Aldo Wrapped ---------- */
-  let stars = null;
-  const wrapped = document.getElementById("aldoWrappedPage"), story = document.getElementById("awStory");
-  const wrappedOpen = () => !wrapped.classList.contains("hidden") && !document.hidden;
-  function syncStars() {
-    if (!wrappedOpen() || reduced()) { if (stars) stars.stop(); return; }
-    if (!stars) {
-      stars = scene(PX.shootingStars, { x: 160, y: 180 }, "pfx-stars", wrappedOpen);
-      story.insertBefore(stars.canvas, story.firstChild);
+  /* ---------- Extinction façon vieille télé à la fermeture d'une fiche ---------- */
+  // l'image s'écrase en une ligne blanche, puis en un point qui s'éteint ; done() ferme vraiment la fenêtre
+  const SQ0 = 0.06, SQ1 = 0.34, DOT1 = 0.86;
+  function crtOff(card, done) {
+    if (!card || reduced() || !card.isConnected) { done(); return; }
+    const r = card.getBoundingClientRect();
+    if (!r.width || !r.height) { done(); return; }
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    canvas.className = "pfx pfx-crt";
+    canvas.setAttribute("aria-hidden", "true");
+    Object.assign(canvas.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", borderRadius: getComputedStyle(card).borderRadius });
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext("2d"), frame = PX.createFrame(W, H), img = ctx.createImageData(W, H);
+    const fx = PX.createFx(PX.crtOff, { color: "#050506" });
+    card.style.animation = "none"; // l'animation d'ouverture (remplissage « both ») bloquerait la transformation
+    card.style.transformOrigin = "50% 50%";
+    let last = 0, finished = false;
+    function restore() { card.style.transform = card.style.filter = card.style.transformOrigin = card.style.animation = ""; }
+    function finish() {
+      if (finished) return;
+      finished = true;
+      done();
+      restore();
+      canvas.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: "ease-out" }).finished.finally(() => canvas.remove());
     }
-    stars.start();
+    function tick(now) {
+      if (finished) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now;
+      fx.update(dt);
+      const t = fx.t;
+      // la fiche elle-même s'écrase et s'illumine au même rythme que l'écran pixel
+      const u = Math.min(1, Math.max(0, (t - SQ0) / (SQ1 - SQ0))), k = t < SQ0 ? 1 : Math.max(0, 1 - u * u * u);
+      card.style.transform = "scaleY(" + k.toFixed(4) + ")";
+      card.style.filter = "brightness(" + (1 + (1 - k) * 1.8).toFixed(2) + ")";
+      PX.clearFrame(frame);
+      fx.draw(frame);
+      PX.composite(frame, img.data, null);
+      ctx.putImageData(img, 0, 0);
+      if (t >= DOT1) finish(); else requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    setTimeout(finish, 2000); // filet de sécurité si l'onglet passe en arrière-plan
   }
-  if (wrapped && story) new MutationObserver(syncStars).observe(wrapped, { attributes: true, attributeFilter: ["class"] });
+  if (window.AldoCine) window.AldoCine.pixel = { crtOff };
 
   curtain();
   attachRays();
-  syncStars();
 })();
